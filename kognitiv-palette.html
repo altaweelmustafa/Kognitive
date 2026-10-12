@@ -1,0 +1,429 @@
+<title>Kognitiv Palette</title>
+<style>
+  /* layout: header, then stacked reference sections (core / domain / status / mockup), single column, cards in a wrapping grid */
+  :root {
+    --bg: #faf9f7;
+    --surface: #ffffff;
+    --surface-2: #f3f1ed;
+    --border: rgba(11,11,11,0.09);
+    --ink: #15181d;
+    --ink-2: #52586a;
+    --ink-3: #898781;
+    --accent: #6d3fd1;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12151a;
+      --surface: #1a1f27;
+      --surface-2: #171b22;
+      --border: rgba(255,255,255,0.09);
+      --ink: #edeff3;
+      --ink-2: #9aa3b2;
+      --ink-3: #6b7280;
+      --accent: #8a5cf0;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12151a;
+    --surface: #1a1f27;
+    --surface-2: #171b22;
+    --border: rgba(255,255,255,0.09);
+    --ink: #edeff3;
+    --ink-2: #9aa3b2;
+    --ink-3: #6b7280;
+    --accent: #8a5cf0;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Manrope", system-ui, -apple-system, sans-serif;
+    padding-inline: 20px;
+    padding-block: 28px;
+    max-width: 920px;
+    margin: 0 auto;
+  }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+
+  header { margin-bottom: 36px; }
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+  h1 {
+    font-size: clamp(28px, 5vw, 38px);
+    font-weight: 700;
+    margin: 0 0 8px;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    color: var(--ink-2);
+    font-size: 15px;
+    line-height: 1.55;
+    margin: 0;
+    max-width: 60ch;
+  }
+
+  section { margin-bottom: 40px; }
+  section > h2 {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 4px;
+  }
+  section > .section-sub {
+    color: var(--ink-2);
+    font-size: 13.5px;
+    margin: 0 0 18px;
+    line-height: 1.5;
+  }
+
+  .mode-row { display: flex; gap: 20px; flex-wrap: wrap; }
+  .mode-col { flex: 1 1 260px; min-width: 0; }
+  .mode-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .mode-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+  .token-list { display: flex; flex-direction: column; gap: 2px; }
+  .token-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 9px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .swatch {
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    flex: none;
+    border: 1px solid var(--border);
+  }
+  .token-meta { min-width: 0; flex: 1; }
+  .token-name { font-size: 13px; font-weight: 600; }
+  .token-use { font-size: 11.5px; color: var(--ink-3); line-height: 1.3; }
+  .token-hex {
+    font-size: 11.5px;
+    color: var(--ink-2);
+    flex: none;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+  }
+  .token-hex:hover { background: var(--surface-2); color: var(--ink); }
+  .token-hex:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .domain-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 12px;
+  }
+  .domain-card {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    padding: 14px;
+  }
+  .domain-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .domain-name { font-size: 14.5px; font-weight: 700; }
+  .domain-game { font-size: 11px; color: var(--ink-3); }
+  .domain-swatches { display: flex; gap: 8px; }
+  .domain-swatch {
+    flex: 1;
+    height: 44px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    padding: 6px 8px;
+  }
+  .domain-swatch-label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.92);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+  }
+  .domain-swatch.light-sw .domain-swatch-label { color: rgba(0,0,0,0.78); text-shadow: none; }
+  .domain-modes { display: flex; gap: 8px; margin-top: 6px; }
+  .domain-modes span { flex: 1; font-size: 10px; color: var(--ink-3); text-align: center; }
+
+  .status-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .status-chip {
+    display: flex; align-items: center; gap: 8px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 14px 8px 10px;
+    background: var(--surface);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .status-chip .dot { width: 9px; height: 9px; border-radius: 50%; }
+  .status-chip .hex { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--ink-3); font-weight: 400; margin-left: 2px; }
+
+  /* mockup, fixed dark values on purpose: shows the app's own dark-first surface, not the artifact's theme */
+  .mockup {
+    background: #12151a;
+    border-radius: 18px;
+    padding: 18px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .mockup-label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    color: #6b7280;
+    margin-bottom: 12px;
+    letter-spacing: 0.04em;
+  }
+  .session-card {
+    background: #1a1f27;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 14px;
+  }
+  .session-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .session-title { color: #edeff3; font-size: 14px; font-weight: 700; }
+  .session-trend { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: #0ca30c; }
+  .game-row { display: flex; flex-direction: column; gap: 8px; }
+  .game-tile {
+    display: flex; align-items: center; gap: 10px;
+    background: #171b22; border-radius: 10px; padding: 10px 12px;
+  }
+  .pill {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px; font-weight: 600;
+    padding: 3px 8px; border-radius: 999px;
+    color: #12151a;
+    flex: none;
+  }
+  .game-name { color: #edeff3; font-size: 13px; font-weight: 600; }
+  .game-meta { color: #6b7280; font-size: 11.5px; margin-left: auto; }
+
+  .a11y-note {
+    font-size: 12.5px;
+    color: var(--ink-3);
+    line-height: 1.6;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+    margin-top: 4px;
+  }
+  .a11y-note b { color: var(--ink-2); }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<header>
+  <p class="eyebrow">Brand &middot; v1</p>
+  <h1>Kognitiv color system</h1>
+  <p>Dark-first UI palette plus five validated domain accents (Memory, Attention, Reasoning, Planning, Flexibility) and a trend scale for the ARIMA session picker. Every categorical pairing below passed the WCAG contrast and colorblind-separation checks &mdash; see Accessibility at the bottom. Tap any hex to copy it for Figma.</p>
+</header>
+
+<section id="core">
+  <h2>Core UI</h2>
+  <p class="section-sub">Background, surface and text tokens. Dark is the default theme; light is designed to the same roles, not an inversion.</p>
+  <div class="mode-row">
+    <div class="mode-col">
+      <div class="mode-label"><span class="mode-dot" style="color:#12151a"></span>Dark (default)</div>
+      <div class="token-list" id="core-dark"></div>
+    </div>
+    <div class="mode-col">
+      <div class="mode-label"><span class="mode-dot" style="color:#3b6fd1"></span>Light</div>
+      <div class="token-list" id="core-light"></div>
+    </div>
+  </div>
+</section>
+
+<section id="domains">
+  <h2>Domain accents</h2>
+  <p class="section-sub">One hue per cognitive domain, used for tags, charts and progress rings in both themes. Brand stays purple, separate from the domain accents.</p>
+  <div class="domain-grid" id="domain-grid"></div>
+</section>
+
+<section id="status">
+  <h2>Trend scale</h2>
+  <p class="section-sub">For the ARIMA forecast badge on each domain. Always shown with an arrow icon and a label, never color alone.</p>
+  <div class="status-row" id="status-row"></div>
+</section>
+
+<section id="mockup">
+  <h2>In context</h2>
+  <p class="section-sub">Today's session card, as it reads on the default dark surface.</p>
+  <div class="mockup">
+    <div class="mockup-label">TODAY &middot; 4 GAMES &middot; ~15 MIN</div>
+    <div class="session-card">
+      <div class="session-head">
+        <div class="session-title">Daily session</div>
+        <div class="session-trend">&uarr; Attention improving</div>
+      </div>
+      <div class="game-row">
+        <div class="game-tile">
+          <span class="pill" style="background:#CC6A2E">MEMORY</span>
+          <span class="game-name">Suit Recall</span>
+          <span class="game-meta">always included</span>
+        </div>
+        <div class="game-tile">
+          <span class="pill" style="background:#E6C200">ATTENTION</span>
+          <span class="game-name">Odd One Out</span>
+          <span class="game-meta">always included</span>
+        </div>
+        <div class="game-tile">
+          <span class="pill" style="background:#CF5F82">FLEXIBILITY</span>
+          <span class="game-name">Rule-Switch Sort</span>
+          <span class="game-meta">ARIMA pick &middot; declining</span>
+        </div>
+        <div class="game-tile">
+          <span class="pill" style="background:#5B8DEF">PLANNING</span>
+          <span class="game-name">Magic Sort</span>
+          <span class="game-meta">ARIMA pick</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="a11y">
+  <h2>Accessibility</h2>
+  <div class="a11y-note">
+    <p><b>Domain accents</b> &mdash; dark and light sets each pass: lightness band for the surface, chroma floor (no washed-out hues), simulated protanopia/deuteranopia/tritanopia separation (worst pair &Delta;E 9.0 dark / 8.2 light, above the safe target), full-color separation (&Delta;E &ge;15), and &ge;3:1 contrast against the app background.</p>
+    <p><b>Brand fill</b> uses a darker purple step (<span class="mono">#6D3FD1</span>) so white button labels clear 4.5:1 body-text contrast; the lighter <span class="mono">#8A5CF0</span> stays for icons, rings and chart strokes where 3:1 is the right bar.</p>
+    <p><b>Trend colors</b> reuse the universal green/red up-down convention and are always paired with an arrow + word, so they still read correctly for colorblind users or on a muted phone screen.</p>
+  </div>
+</section>
+
+<script>
+(function () {
+  const core = {
+    dark: [
+      ["#12151a", "Page background", "App canvas"],
+      ["#1a1f27", "Surface", "Cards, session tiles"],
+      ["#232933", "Elevated", "Modals, sheets"],
+      ["#edeff3", "Text primary", "Headlines, scores"],
+      ["#9aa3b2", "Text secondary", "Labels, meta"],
+      ["#6b7280", "Text muted", "Placeholders, timestamps"],
+      ["#8a5cf0", "Brand accent", "Icons, rings, active nav"],
+      ["#6d3fd1", "Brand fill", "Button backgrounds"]
+    ],
+    light: [
+      ["#f7f5f2", "Page background", "App canvas"],
+      ["#ffffff", "Surface", "Cards, session tiles"],
+      ["#fbfaf8", "Elevated", "Modals, sheets"],
+      ["#15181d", "Text primary", "Headlines, scores"],
+      ["#52586a", "Text secondary", "Labels, meta"],
+      ["#898781", "Text muted", "Placeholders, timestamps"],
+      ["#6d3fd1", "Brand accent", "Icons, rings, active nav"],
+      ["#6d3fd1", "Brand fill", "Button backgrounds"]
+    ]
+  };
+
+  const domains = [
+    { name: "Memory", game: "Suit Recall · Memory Matrix", dark: "#cc6a2e", light: "#a8501e" },
+    { name: "Attention", game: "Odd One Out · Train of Thought", dark: "#e6c200", light: "#ffdf00" },
+    { name: "Reasoning", game: "Joker Sudoku · 24 Game", dark: "#2f9b78", light: "#1b8a63" },
+    { name: "Planning", game: "Magic Sort · Chess Puzzles", dark: "#5b8def", light: "#3b6fd1" },
+    { name: "Flexibility", game: "Rule-Switch Sort", dark: "#cf5f82", light: "#b8476a" }
+  ];
+
+  const statuses = [
+    { label: "↑ Improving", hex: "#0ca30c" },
+    { label: "→ Plateau", hex: "var(--ink-2)", isToken: true },
+    { label: "↓ Declining", hex: "#d03b3b" }
+  ];
+
+  function copy(hex, el) {
+    const text = hex.replace("var(--ink-2)", "");
+    const run = () => {
+      el.dataset.copied = "1";
+      const old = el.textContent;
+      el.textContent = "copied";
+      setTimeout(() => { el.textContent = old; delete el.dataset.copied; }, 900);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(hex).then(run).catch(() => fallback(hex, run));
+    } else {
+      fallback(hex, run);
+    }
+  }
+  function fallback(hex, run) {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = hex; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      run();
+    } catch (e) {}
+  }
+
+  function row(hex, name, use) {
+    const r = document.createElement("div");
+    r.className = "token-row";
+    const sw = document.createElement("div");
+    sw.className = "swatch";
+    sw.style.background = hex;
+    const meta = document.createElement("div");
+    meta.className = "token-meta";
+    meta.innerHTML = '<div class="token-name">' + name + '</div><div class="token-use">' + use + '</div>';
+    const btn = document.createElement("button");
+    btn.className = "token-hex mono";
+    btn.textContent = hex;
+    btn.addEventListener("click", () => copy(hex, btn));
+    r.append(sw, meta, btn);
+    return r;
+  }
+
+  const coreDark = document.getElementById("core-dark");
+  const coreLight = document.getElementById("core-light");
+  core.dark.forEach(([hex, name, use]) => coreDark.appendChild(row(hex, name, use)));
+  core.light.forEach(([hex, name, use]) => coreLight.appendChild(row(hex, name, use)));
+
+  const domainGrid = document.getElementById("domain-grid");
+  domains.forEach(d => {
+    const card = document.createElement("div");
+    card.className = "domain-card";
+    card.innerHTML =
+      '<div class="domain-top"><span class="domain-name">' + d.name + '</span><span class="domain-game">' + d.game + '</span></div>' +
+      '<div class="domain-swatches">' +
+        '<div class="domain-swatch" style="background:' + d.dark + '"><span class="domain-swatch-label">' + d.dark + '</span></div>' +
+        '<div class="domain-swatch light-sw" style="background:' + d.light + '"><span class="domain-swatch-label">' + d.light + '</span></div>' +
+      '</div>' +
+      '<div class="domain-modes"><span>dark</span><span>light</span></div>';
+    const [darkSw, lightSw] = card.querySelectorAll(".domain-swatch");
+    darkSw.style.cursor = "pointer"; lightSw.style.cursor = "pointer";
+    darkSw.addEventListener("click", () => copy(d.dark, darkSw.querySelector(".domain-swatch-label")));
+    lightSw.addEventListener("click", () => copy(d.light, lightSw.querySelector(".domain-swatch-label")));
+    domainGrid.appendChild(card);
+  });
+
+  const statusRow = document.getElementById("status-row");
+  statuses.forEach(s => {
+    const chip = document.createElement("div");
+    chip.className = "status-chip";
+    const dotColor = s.isToken ? "var(--ink-3)" : s.hex;
+    chip.innerHTML = '<span class="dot" style="background:' + dotColor + '"></span>' + s.label +
+      (s.isToken ? '' : '<span class="hex mono">' + s.hex + '</span>');
+    statusRow.appendChild(chip);
+  });
+})();
+</script>

@@ -1,0 +1,52 @@
+name: kognitiv
+description: "Kognitiv - solo cognitive training. Four games a day, picked for your weakest domains."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flame: ^1.38.2
+  flutter:
+    sdk: flutter
+  flutter_markdown_plus: ^1.0.12
+  go_router: ^18.0.2
+  http: ^1.6.0
+  shared_preferences: ^2.5.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/chess/pieces/
+    - assets/faces/
+
+  fonts:
+    - family: Zilla Slab
+      fonts:
+        - asset: assets/fonts/ZillaSlab-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/ZillaSlab-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/ZillaSlab-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/ZillaSlab-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/ZillaSlab-Italic.ttf
+          weight: 400
+          style: italic
+        - asset: assets/fonts/ZillaSlab-BoldItalic.ttf
+          weight: 700
+          style: italic
+    - family: Ubuntu Mono
+      fonts:
+        - asset: assets/fonts/UbuntuMono-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/UbuntuMono-Bold.ttf
+          weight: 700
