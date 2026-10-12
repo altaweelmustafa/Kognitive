@@ -1,0 +1,35 @@
+name: iOS unsigned IPA
+
+# Manual only: macOS runners bill at 10x minutes on private repos.
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.44.8
+          cache: true
+
+      - run: flutter pub get
+
+      - run: flutter build ios --release --no-codesign
+
+      # An .ipa is just a zip with the .app inside a top-level Payload/ dir.
+      - name: Package IPA
+        run: |
+          mkdir Payload
+          cp -R build/ios/iphoneos/Runner.app Payload/
+          zip -qry kognitiv.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kognitiv-ipa
+          path: kognitiv.ipa
+          if-no-files-found: error
