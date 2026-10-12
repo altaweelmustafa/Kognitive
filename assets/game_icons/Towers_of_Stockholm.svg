@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 240.444 251.265">
+  <defs>
+    <style>
+      .cls-1{fill:none;stroke:#603813;stroke-width:13;stroke-miterlimit:10}
+      .cls-2{fill:#e6c200}
+      .cls-3{fill:#61abe2}
+      .cls-4{fill:#cc6a2e}
+      .cls-5{font-family:&apos;Source Sans 3&apos;;font-size:12;fill:#ffffff}
+    </style>
+  </defs>
+  <title>Untitled-1</title>
+  <g id="Asset_7" data-name="Asset 7">
+    <g>
+      <path d="M233.944 165.251 L233.944 244.673" class="cls-1"/>
+      <g>
+        <path d="M134.59 85.922 L134.59 244.765" class="cls-1"/>
+        <path d="M99.355 209.53 C99.355 190.07 115.13 174.295 134.59 174.295 C154.049 174.295 169.825 190.07 169.825 209.53 C169.825 228.989 154.049 244.765 134.59 244.765 C115.13 244.765 99.355 228.989 99.355 209.53 Z" class="cls-2"/>
+      </g>
+      <g>
+        <path d="M35.235 6.5 L35.235 244.765" class="cls-1"/>
+        <path d="M0 209.438 C0 189.978 15.775 174.202 35.235 174.202 C54.695 174.202 70.47 189.978 70.47 209.438 C70.47 228.897 54.695 244.673 35.235 244.673 C15.775 244.673 0 228.897 0 209.438 Z" class="cls-3"/>
+        <path d="M0 139.059 C0 119.6 15.775 103.824 35.235 103.824 C54.695 103.824 70.47 119.6 70.47 139.059 C70.47 158.519 54.695 174.295 35.235 174.295 C15.775 174.295 0 158.519 0 139.059 Z" class="cls-4"/>
+        <text transform="matrix(2.165 0 0 2.165 17.401 217.774)" x="0" y="0" xml:space="preserve" class="cls-5"><tspan x="0" y="0">❄︎</tspan></text>
+      </g>
+    </g>
+  </g>
+</svg>
