@@ -11,6 +11,7 @@ const games = <Game>[
     domain: CognitiveDomain.memory,
     icon: Icons.grid_on_rounded,
     tagline: 'Remember which tiles lit up, then rebuild the pattern.',
+    image: 'assets/game_icons/Memory_Matrix.png',
   ),
   Game(
     id: 'suit-recall',
@@ -25,6 +26,7 @@ const games = <Game>[
     domain: CognitiveDomain.memory,
     icon: Icons.badge_outlined,
     tagline: 'Match names to the faces you just met.',
+    image: 'assets/game_icons/Whats_My_Name.png',
   ),
   Game(
     id: 'odd-one-out',
@@ -39,6 +41,7 @@ const games = <Game>[
     domain: CognitiveDomain.attention,
     icon: Icons.call_split_rounded,
     tagline: 'Set the toggles to send every point home.',
+    image: 'assets/game_icons/Points_of_Thought.png',
   ),
   Game(
     id: 'sudoku',
@@ -47,6 +50,7 @@ const games = <Game>[
     icon: Icons.apps_rounded,
     tagline: 'Fill the grid so every row, column and box holds 1 to 9.',
     inSessions: false,
+    image: 'assets/game_icons/Sudoku.png',
   ),
   Game(
     id: '24-game',
@@ -61,6 +65,7 @@ const games = <Game>[
     domain: CognitiveDomain.planning,
     icon: Icons.science_outlined,
     tagline: 'Decant the tinctures until every bottle holds one colour.',
+    image: 'assets/game_icons/Magic_Sort.png',
   ),
   Game(
     id: 'chess-puzzles',
@@ -69,7 +74,7 @@ const games = <Game>[
     icon: Icons.extension_outlined,
     tagline: 'Find the winning line in puzzles from Lichess.',
     inSessions: false,
-    image: 'assets/chess/pieces/wn.png',
+    image: 'assets/game_icons/chess.png',
   ),
   Game(
     id: 'towers-of-stockholm',
@@ -77,6 +82,7 @@ const games = <Game>[
     domain: CognitiveDomain.flexibility,
     icon: Icons.swap_horiz_rounded,
     tagline: 'Rebuild the towers while the rules keep changing.',
+    image: 'assets/game_icons/Towers_of_Stockholm.png',
   ),
   Game(
     id: 'suit-sort',
@@ -92,6 +98,7 @@ const games = <Game>[
     icon: Icons.bolt_rounded,
     tagline: 'Sixty seconds. As many sums as you can.',
     inSessions: false,
+    image: 'assets/game_icons/Quick_Math.png',
   ),
 ];
 
