@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 377.347 212.644">
+  <defs>
+    <style>
+      .cls-1{fill:url(#radial-gradient-1)}
+    </style>
+    <radialGradient id="radial-gradient-1" cx="188.674" cy="106.322" r="188.674" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#cc8c2e"/>
+      <stop offset="0.1429" stop-color="#cc6a2e"/>
+      <stop offset="0.2857" stop-color="#cc972e"/>
+      <stop offset="0.4286" stop-color="#cc7d2e"/>
+      <stop offset="0.5714" stop-color="#cc822e"/>
+      <stop offset="0.7143" stop-color="#cc862e"/>
+      <stop offset="0.8571" stop-color="#cc752e"/>
+      <stop offset="1" stop-color="#cc6a2e"/>
+    </radialGradient>
+  </defs>
+  <title>Untitled-1</title>
+  <g id="Asset_9" data-name="Asset 9">
+    <path d="M10 0 L367.347 0 C372.87 0 377.347 4.477 377.347 10 L377.347 202.644 C377.347 208.167 372.87 212.644 367.347 212.644 L10 212.644 C4.477 212.644 0 208.167 0 202.644 L0 10 C0 4.477 4.477 0 10 0 Z" class="cls-1"/>
+  </g>
+</svg>
