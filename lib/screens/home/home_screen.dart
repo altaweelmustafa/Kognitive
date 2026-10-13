@@ -73,7 +73,7 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 18),
           // Chosen by the backend each day from the player's results.
           SizedBox(
-            height: 240,
+            height: 212,
             child: ListenableBuilder(
               listenable: Progress.instance,
               builder: (context, _) {
@@ -92,13 +92,14 @@ class HomeScreen extends StatelessWidget {
                 }
                 return ListView.separated(
                   scrollDirection: Axis.horizontal,
+                  clipBehavior: Clip.none,
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   itemCount: plan.games.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 30),
+                  separatorBuilder: (_, _) => const SizedBox(width: 20),
                   itemBuilder: (context, i) {
                     final game = plan.games[i].game;
                     return SizedBox(
-                      width: 154,
+                      width: 204,
                       child: GameCard(
                         game: game,
                         onTap: () => context.push(Routes.game(game.id)),

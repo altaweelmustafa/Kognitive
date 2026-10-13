@@ -39,7 +39,7 @@ class DomainGamesScreen extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 20),
                 child: Row(
                   children: [
-                    SizedBox(width: 72, child: GameArt(game: game)),
+                    SizedBox(width: 112, child: GameArt(game: game)),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(

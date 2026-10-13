@@ -26,6 +26,9 @@ extension CognitiveDomainConfig on CognitiveDomain {
     CognitiveDomain.flexibility => c.flexibility,
   };
 
+  /// Wide backdrop the domain's game icons stand on.
+  String get banner => 'assets/game_banners/$name.png';
+
   IconData get icon => switch (this) {
     CognitiveDomain.memory => Icons.grid_view_rounded,
     CognitiveDomain.attention => Icons.center_focus_strong_outlined,

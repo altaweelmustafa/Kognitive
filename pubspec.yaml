@@ -26,6 +26,7 @@ flutter:
   assets:
     - assets/chess/pieces/
     - assets/faces/
+    - assets/game_banners/
     - assets/game_icons/Magic_Sort.png
     - assets/game_icons/Memory_Matrix.png
     - assets/game_icons/Points_of_Thought.png

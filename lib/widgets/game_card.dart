@@ -5,7 +5,7 @@ import '../theme/app_text.dart';
 import 'domain_label.dart';
 import 'game_art.dart';
 
-/// Reusable game card: square art, game name, optional domain label.
+/// Reusable game card: banner art, game name, optional domain label.
 /// Takes the width of its parent.
 class GameCard extends StatelessWidget {
   const GameCard({
@@ -34,7 +34,7 @@ class GameCard extends StatelessWidget {
             : CrossAxisAlignment.start,
         children: [
           GameArt(game: game),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Text(
             game.name,
             style: titleStyle,
