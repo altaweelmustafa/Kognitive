@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,28 +8,30 @@ import '../../theme/app_text.dart';
 import '../../widgets/detail_scaffold.dart';
 import '../../widgets/pill_button.dart';
 import '../shared/session_game_views.dart';
+import '../shared/tutorial_frame.dart';
 import 'names_logic.dart';
+import 'names_tutorial.dart';
 
 enum _Phase { loading, failed, ready, study, ask, done }
 
-/// What's My Name?: meet five new people a day, then recall them by typing.
-/// Faces met on earlier days come back for review on a spaced schedule that
+/// What's My Name?: meet new people one at a time, and recall each one by
+/// typing straight after meeting them. Faces met on earlier days come back for review on a spaced schedule that
 /// the server keeps.
 class NamesScreen extends StatefulWidget {
-  const NamesScreen({super.key, this.random, this.api});
+  const NamesScreen({super.key, this.api});
 
-  /// For tests: fixes the order questions are asked in.
-  final Random? random;
   final ApiClient? api;
 
   @override
   State<NamesScreen> createState() => _NamesScreenState();
 }
 
-class _NamesScreenState extends State<NamesScreen> {
+class _NamesScreenState extends State<NamesScreen> with TutorialGate {
+  @override
+  String get tutorialId => 'whats-my-name';
+
   static const _path = '/games/whats-my-name';
 
-  late final Random _random = widget.random ?? Random();
   late final ApiClient _api = widget.api ?? ApiClient();
   final _input = TextEditingController();
   final _inputFocus = FocusNode();
@@ -40,7 +40,8 @@ class _NamesScreenState extends State<NamesScreen> {
   String? _error;
   NamesSession? _session;
 
-  int _studying = 0; // which new person is on screen
+  List<NewPerson> _people = []; // today's new people still to meet
+  int _studying = 0; // which of them is on screen
   List<Ask> _queue = []; // what is still to be asked, in order
   int _asked = 0; // position in the queue
   AnswerResult? _result; // the answer just judged, while it is shown
@@ -113,34 +114,50 @@ class _NamesScreenState extends State<NamesScreen> {
     ];
   }
 
-  Future<void> _start() async {
-    final people = _toStudy;
-    if (people.isNotEmpty) {
-      setState(() => _phase = _Phase.study);
-      for (var i = 0; i < people.length; i++) {
-        setState(() => _studying = i);
-        await Future<void>.delayed(studyFor);
-        if (!mounted) return;
-      }
-    }
+  /// New people or reviews left to do today.
+  bool get _anythingDue {
     final session = _session!;
-    // New people first, in a mixed-up order, then the reviews.
-    final fresh = [
-      for (final a in session.newAsks)
-        if (!session.isAnswered(a)) a,
-    ]..shuffle(_random);
+    return _toStudy.isNotEmpty ||
+        session.reviews.any((a) => !session.isAnswered(a));
+  }
+
+  /// Meets each new person and asks about them straight away, one person at
+  /// a time; then the reviews.
+  void _start() {
+    final session = _session!;
+    final people = _toStudy;
     setState(() {
+      _people = people;
       _queue = [
-        ...fresh,
+        for (final p in people)
+          for (final a in session.newAsks)
+            if (a.id == p.id && !session.isAnswered(a)) a,
         for (final a in session.reviews)
           if (!session.isAnswered(a)) a,
       ];
-      _asked = 0;
       _result = null;
       _correct = session.answered.values.where((right) => right).length;
       _total = session.answered.length;
     });
-    _queue.isEmpty ? _finish() : _showQuestion();
+    _queue.isEmpty ? _finish() : _goTo(0);
+  }
+
+  /// Asks question [index], first introducing the person if it is the first
+  /// question about someone new.
+  Future<void> _goTo(int index) async {
+    _asked = index;
+    final ask = _queue[index];
+    final meeting =
+        !ask.review && (index == 0 || _queue[index - 1].id != ask.id);
+    if (meeting) {
+      setState(() {
+        _studying = _people.indexWhere((p) => p.id == ask.id);
+        _phase = _Phase.study;
+      });
+      await Future<void>.delayed(studyFor);
+      if (!mounted) return;
+    }
+    _showQuestion();
   }
 
   void _showQuestion() {
@@ -185,8 +202,7 @@ class _NamesScreenState extends State<NamesScreen> {
 
   void _next() {
     if (_asked + 1 < _queue.length) {
-      _asked++;
-      _showQuestion();
+      _goTo(_asked + 1);
     } else {
       _finish();
     }
@@ -251,6 +267,13 @@ class _NamesScreenState extends State<NamesScreen> {
         _ => ListView(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
           children: switch (_phase) {
+            _Phase.ready when showTutorial == null => const [],
+            _Phase.ready when showTutorial! && _anythingDue => [
+              // Lands on the overview of today, with its own Start.
+              NamesTutorial(
+                onDone: () => setState(() => finishTutorial(() {})),
+              ),
+            ],
             _Phase.ready => _intro(),
             _Phase.study => _study(),
             _Phase.ask => _ask(),
@@ -278,8 +301,9 @@ class _NamesScreenState extends State<NamesScreen> {
       Text(
         nothing
             ? 'Nobody is due today. Come back tomorrow.'
-            : 'Each day you meet new people: a face, a name, what they do and one thing about them. '
-                  'Then you are asked about them and type the answers. Small typos are forgiven.\n\n'
+            : 'Each day you meet new people, one at a time: a face, a name, what they do and one '
+                  'thing about them. Right after meeting someone you are asked about them and type '
+                  'the answers. Small typos are forgiven.\n\n'
                   'People you met before come back for review. Remember them and they return less '
                   'and less often; forget, and they are back tomorrow.',
         textAlign: TextAlign.center,
@@ -357,7 +381,7 @@ class _NamesScreenState extends State<NamesScreen> {
 
   List<Widget> _study() {
     final c = context.colors;
-    final people = _toStudy;
+    final people = _people;
     final person = people[_studying];
     Widget fact(IconData icon, String text) => Padding(
       padding: const EdgeInsets.only(top: 8),

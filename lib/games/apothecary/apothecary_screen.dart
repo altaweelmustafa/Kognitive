@@ -11,6 +11,8 @@ import '../../theme/app_text.dart';
 import '../../widgets/detail_scaffold.dart';
 import '../../widgets/pill_button.dart';
 import '../shared/session_game_views.dart';
+import '../shared/tutorial_frame.dart';
+import 'apothecary_tutorial.dart';
 import 'apothecary_game.dart';
 import 'apothecary_logic.dart';
 
@@ -32,7 +34,10 @@ class ApothecaryScreen extends StatefulWidget {
   State<ApothecaryScreen> createState() => _ApothecaryScreenState();
 }
 
-class _ApothecaryScreenState extends State<ApothecaryScreen> {
+class _ApothecaryScreenState extends State<ApothecaryScreen> with TutorialGate {
+  @override
+  String get tutorialId => 'apothecary';
+
   late final Random _random = widget.random ?? Random();
   late final ApiClient _api = widget.api ?? ApiClient();
   final _clock = Stopwatch();
@@ -142,6 +147,10 @@ class _ApothecaryScreenState extends State<ApothecaryScreen> {
         children: switch (_phase) {
           _Phase.ready when _playedToday => const [
             PlayedTodayNotice(gameName: 'Apothecary'),
+          ],
+          _Phase.ready when showTutorial == null => const [],
+          _Phase.ready when showTutorial! => [
+            ApothecaryTutorial(onDone: () => finishTutorial(_begin)),
           ],
           _Phase.ready => _intro(),
           _Phase.done => _summary(),

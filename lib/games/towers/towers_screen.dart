@@ -10,7 +10,10 @@ import '../../theme/app_text.dart';
 import '../../widgets/detail_scaffold.dart';
 import '../../widgets/pill_button.dart';
 import '../shared/session_game_views.dart';
+import '../shared/tutorial_frame.dart';
+import 'towers_tutorial.dart';
 import 'towers_logic.dart';
+import 'towers_pegs.dart';
 
 enum _Phase { ready, play, feedback, done }
 
@@ -29,7 +32,10 @@ class TowersScreen extends StatefulWidget {
   State<TowersScreen> createState() => _TowersScreenState();
 }
 
-class _TowersScreenState extends State<TowersScreen> {
+class _TowersScreenState extends State<TowersScreen> with TutorialGate {
+  @override
+  String get tutorialId => 'towers-of-stockholm';
+
   late final Random _random = widget.random ?? Random();
   late final ApiClient _api = widget.api ?? ApiClient();
   final _clock = Stopwatch();
@@ -158,6 +164,10 @@ class _TowersScreenState extends State<TowersScreen> {
           _Phase.ready when _playedToday => const [
             PlayedTodayNotice(gameName: 'Towers of Stockholm'),
           ],
+          _Phase.ready when showTutorial == null => const [],
+          _Phase.ready when showTutorial! => [
+            TowersTutorial(onDone: () => finishTutorial(_startPuzzle)),
+          ],
           _Phase.ready => _intro(),
           _Phase.done => _summary(),
           _ => _play(),
@@ -233,7 +243,7 @@ class _TowersScreenState extends State<TowersScreen> {
           Expanded(
             child: _card(
               'GOAL',
-              _Pegs(pegs: _puzzle.goal, colors: _ballColors, ball: 22),
+              TowerPegs(pegs: _puzzle.goal, colors: _ballColors, ball: 22),
             ),
           ),
           const SizedBox(width: 12),
@@ -241,7 +251,7 @@ class _TowersScreenState extends State<TowersScreen> {
         ],
       ),
       const SizedBox(height: 28),
-      _Pegs(
+      TowerPegs(
         pegs: _state.pegs,
         colors: _ballColors,
         ball: 68,
@@ -296,7 +306,7 @@ class _TowersScreenState extends State<TowersScreen> {
         for (var colour = 0; colour < Towers.colours; colour++) ...[
           if (colour > 0)
             Icon(Icons.chevron_right, size: 16, color: c.textMuted),
-          _Ball(
+          TowerBall(
             color: _ballColors[colour],
             size: 30,
             frozen: colour == _state.frozen,
@@ -323,130 +333,5 @@ class _TowersScreenState extends State<TowersScreen> {
         onRetry: _save,
       ),
     ];
-  }
-}
-
-/// Three pegs of heights 3, 2 and 1 with their balls.
-class _Pegs extends StatelessWidget {
-  const _Pegs({
-    required this.pegs,
-    required this.colors,
-    required this.ball,
-    this.frozen,
-    this.lifted,
-    this.onTap,
-  });
-
-  final List<List<int>> pegs;
-  final List<Color> colors;
-  final double ball; // diameter
-  final int? frozen;
-  final int? lifted;
-  final ValueChanged<int>? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final tallest = Towers.capacities.reduce((a, b) => a > b ? a : b);
-    final rod = ball * 0.16;
-    // Room above the tallest peg for a lifted ball.
-    final height = ball * (tallest + (onTap == null ? 0.3 : 1.3));
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          height: height,
-          child: Row(
-            mainAxisSize: onTap == null ? MainAxisSize.min : MainAxisSize.max,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              for (var p = 0; p < pegs.length; p++)
-                _slot(
-                  child: GestureDetector(
-                    key: onTap == null ? null : ValueKey('peg-$p'),
-                    behavior: HitTestBehavior.opaque,
-                    onTap: onTap == null ? null : () => onTap!(p),
-                    child: SizedBox(
-                      width: ball * 1.35,
-                      height: height,
-                      child: Stack(
-                        alignment: Alignment.bottomCenter,
-                        children: [
-                          Container(
-                            width: rod,
-                            height: ball * (Towers.capacities[p] + 0.25),
-                            decoration: BoxDecoration(
-                              color: c.elevated,
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(rod / 2),
-                              ),
-                            ),
-                          ),
-                          for (final (i, colour) in pegs[p].indexed)
-                            AnimatedPositioned(
-                              key: ValueKey('ball-$colour'),
-                              duration: const Duration(milliseconds: 120),
-                              // The top ball of a lifted peg floats above the rod.
-                              bottom: lifted == p && i == pegs[p].length - 1
-                                  ? ball * (Towers.capacities[p] + 0.3)
-                                  : ball * i,
-                              child: _Ball(
-                                color: colors[colour],
-                                size: ball,
-                                frozen: colour == frozen,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        Container(
-          height: rod,
-          width: onTap == null ? ball * 1.35 * pegs.length : double.infinity,
-          decoration: BoxDecoration(
-            color: c.elevated,
-            borderRadius: BorderRadius.circular(rod / 2),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _slot({required Widget child}) =>
-      onTap == null ? child : Expanded(child: Center(child: child));
-}
-
-/// A ball. Frozen ones are iced over and carry a snowflake, so the frost
-/// doesn't depend on colour alone.
-class _Ball extends StatelessWidget {
-  const _Ball({required this.color, required this.size, this.frozen = false});
-
-  final Color color;
-  final double size;
-  final bool frozen;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: frozen ? Color.lerp(color, Colors.white, 0.6) : color,
-        shape: BoxShape.circle,
-        border: frozen
-            ? Border.all(color: Colors.white, width: size * 0.06)
-            : null,
-      ),
-      child: frozen
-          ? Icon(Icons.ac_unit, size: size * 0.55, color: c.background)
-          : null,
-    );
   }
 }

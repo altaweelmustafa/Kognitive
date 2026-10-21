@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kognitiv/games/towers/towers_logic.dart';
 import 'package:kognitiv/games/towers/towers_screen.dart';
+import 'package:kognitiv/games/towers/towers_tutorial.dart';
 import 'package:kognitiv/theme/app_theme.dart';
 
 import 'fake_backend.dart';
@@ -75,7 +76,7 @@ void main() {
         home: TowersScreen(random: Random(11)),
       ),
     );
-    await tester.tap(find.text('Start'));
+    await tester.tap(find.text('Skip'));
     await tester.pumpAndSettle();
 
     Future<void> play(TowerMove move) async {
@@ -167,5 +168,68 @@ void main() {
     ]);
     expect(find.text('840'), findsOneWidget); // score from the server
     expect(find.text('Perfect puzzles'), findsOneWidget);
+  });
+
+  testWidgets('the tutorial: a plain move, then the frost, then Start', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(428, 926);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final backend = FakeBackend();
+    await backend.install(loggedIn: true);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark,
+        home: TowersScreen(random: Random(1)),
+      ),
+    );
+    expect(find.byType(TowersTutorial), findsOneWidget);
+
+    Future<void> play(int from, int to) async {
+      await tester.tap(find.byKey(ValueKey('peg-$from')));
+      await tester.pump();
+      await tester.tap(find.byKey(ValueKey('peg-$to')));
+      await tester.pumpAndSettle();
+    }
+
+    // One move: the top ball of the first peg onto the empty one.
+    expect(find.text('Move a ball'), findsOneWidget);
+    await play(0, 2);
+    expect(find.text('That’s it'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 1100));
+    await tester.pumpAndSettle();
+
+    // The ball on the last peg is frozen: tapping it only explains.
+    expect(find.text('Mind the frost'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('peg-2')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('frozen. It thaws'), findsOneWidget);
+
+    // A wrong second move sets the puzzle back.
+    await play(1, 0);
+    await play(0, 1);
+    expect(find.textContaining('Not quite'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 1400));
+    await tester.pumpAndSettle();
+    expect(find.text('Try again'), findsOneWidget);
+    expect(find.text('MOVES 0 / 2'), findsOneWidget);
+
+    await play(1, 0);
+    await play(2, 1);
+    expect(find.text('Solved'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 1100));
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pumpAndSettle();
+    expect(find.text('Perfect'), findsOneWidget);
+    expect(find.text('3'), findsOneWidget); // next puzzle a move longer
+
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+    expect(find.text('Ready?'), findsOneWidget);
+    await tester.tap(find.text('Start'));
+    await tester.pumpAndSettle();
+    expect(find.byType(TowersTutorial), findsNothing);
+    expect(find.text('PUZZLE 1 OF 5'), findsOneWidget);
   });
 }

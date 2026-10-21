@@ -100,6 +100,50 @@ def performance(user_id: int, before: date | None = None) -> dict:
     }
 
 
+def day_summary(user_id: int, day: date) -> dict:
+    """Everything the player did on one day (UTC), for the calendar."""
+    d = day.isoformat()
+    with db.connect() as conn:
+        games = [
+            {"game_id": r["game_id"], "domain": r["domain"], "score": round(r["score"], 1)}
+            for r in conn.execute(
+                "SELECT game_id, domain, score FROM game_results"
+                " WHERE user_id = ? AND day = ? ORDER BY played_at",
+                (user_id, d),
+            )
+        ]
+        math = conn.execute(
+            "SELECT COUNT(*) AS runs, MAX(correct) AS best FROM quick_math_attempts"
+            " WHERE user_id = ? AND date(played_at) = ?",
+            (user_id, d),
+        ).fetchone()
+        chess = conn.execute(
+            "SELECT COUNT(*) FROM chess_attempts WHERE user_id = ? AND solved = 1 AND date(played_at) = ?",
+            (user_id, d),
+        ).fetchone()[0]
+        sudoku = dict(
+            conn.execute(
+                "SELECT difficulty, COUNT(*) FROM sudoku_attempts"
+                " WHERE user_id = ? AND solved = 1 AND date(played_at) = ? GROUP BY difficulty",
+                (user_id, d),
+            ).fetchall()
+        )
+    # The day's KPI, worked out as for the history: each domain's average
+    # that day, then the average across domains.
+    by_domain: dict[str, list[float]] = {}
+    for g in games:
+        by_domain.setdefault(g["domain"], []).append(g["score"])
+    means = [sum(v) / len(v) for v in by_domain.values()]
+    return {
+        "day": d,
+        "kpi": round(sum(means) / len(means), 1) if means else None,
+        "games": games,
+        "quick_math": {"runs": math["runs"], "best": math["best"]},
+        "chess_solved": chess,
+        "sudoku_solved": {k: sudoku.get(k, 0) for k in ("easy", "medium", "hard")},
+    }
+
+
 # ── chess and sudoku ───────────────────────────────────────
 # Outside the session and the KPI, so they get their own numbers. Daily
 # puzzles are left out: only practice puzzles count here.

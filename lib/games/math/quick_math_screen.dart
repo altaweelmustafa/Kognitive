@@ -11,6 +11,9 @@ import '../../data/session.dart';
 import '../../theme/app_text.dart';
 import '../../widgets/detail_scaffold.dart';
 import '../../widgets/pill_button.dart';
+import '../shared/tutorial_frame.dart';
+import 'quick_math_tutorial.dart';
+import 'quick_math_keypad.dart';
 import 'quick_math_logic.dart';
 
 enum _Phase { ready, running, done }
@@ -30,7 +33,10 @@ class QuickMathScreen extends StatefulWidget {
 }
 
 class _QuickMathScreenState extends State<QuickMathScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, TutorialGate {
+  @override
+  String get tutorialId => 'quick-math';
+
   late final Random _random = widget.random ?? Random();
   late final ApiClient _api = widget.api ?? ApiClient();
   late final Ticker _ticker = createTicker(_onTick);
@@ -158,6 +164,10 @@ class _QuickMathScreenState extends State<QuickMathScreen>
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
           children: switch (_phase) {
+            _Phase.ready when showTutorial == null => const [],
+            _Phase.ready when showTutorial! => [
+              QuickMathTutorial(onDone: () => finishTutorial(_start)),
+            ],
             _Phase.ready => _intro(),
             _Phase.running => _play(),
             _Phase.done => _summary(),
@@ -268,51 +278,8 @@ class _QuickMathScreenState extends State<QuickMathScreen>
         ),
       ),
       const SizedBox(height: 24),
-      for (final row in const [
-        ['1', '2', '3'],
-        ['4', '5', '6'],
-        ['7', '8', '9'],
-        ['', '0', '⌫'],
-      ])
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Row(
-            children: [
-              for (final (i, label) in row.indexed) ...[
-                if (i > 0) const SizedBox(width: 8),
-                Expanded(child: label.isEmpty ? const SizedBox() : _key(label)),
-              ],
-            ],
-          ),
-        ),
+      MathKeypad(onDigit: _press, onErase: _erase),
     ];
-  }
-
-  Widget _key(String label) {
-    final c = context.colors;
-    final erase = label == '⌫';
-    return GestureDetector(
-      key: ValueKey(erase ? 'key-erase' : 'key-$label'),
-      // On press, not release: every fraction of a second counts.
-      onTapDown: (_) => erase ? _erase() : _press(label),
-      child: Container(
-        height: 62,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: c.surface,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: erase
-            ? Icon(Icons.backspace_outlined, color: c.textSecondary)
-            : Text(
-                label,
-                style: AppText.mono16.copyWith(
-                  fontSize: 28,
-                  color: c.textPrimary,
-                ),
-              ),
-      ),
-    );
   }
 
   List<Widget> _summary() {

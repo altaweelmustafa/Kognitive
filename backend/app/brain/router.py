@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, model_validator
 
@@ -234,6 +236,12 @@ def quick_math_result(body: QuickMathResult, user=Depends(current_user)):
 @router.get("/me/performance")
 def performance(user=Depends(current_user)):
     return service.performance(user["id"])
+
+
+@router.get("/me/day/{day}")
+def day_summary(day: date, user=Depends(current_user)):
+    """What the player did on one day, for a tap on the calendar."""
+    return service.day_summary(user["id"], day)
 
 
 @router.get("/me/today")

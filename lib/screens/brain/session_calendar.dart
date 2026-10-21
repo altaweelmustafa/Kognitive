@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import '../../config/color_config.dart';
 import '../../data/session.dart';
 import '../../theme/app_text.dart';
+import 'day_sheet.dart';
 
-/// Month grid. Days on which the player solved something get a flame.
+/// Month grid. Days on which the player solved something get a flame;
+/// tap one to see what was played.
 class SessionCalendar extends StatelessWidget {
   const SessionCalendar({super.key, required this.month});
 
@@ -102,6 +104,9 @@ class SessionCalendar extends StatelessWidget {
                         played: playedOn(days[i]),
                         today: DateUtils.isSameDay(days[i], now),
                         future: days[i].isAfter(now),
+                        onTap: playedOn(days[i])
+                            ? () => showDaySheet(context, days[i])
+                            : null,
                       ),
                       _ => const SizedBox(height: _DayCell.height),
                     },
@@ -130,6 +135,7 @@ class _DayCell extends StatelessWidget {
     required this.played,
     required this.today,
     required this.future,
+    this.onTap,
   });
 
   static const height = 46.0;
@@ -138,17 +144,29 @@ class _DayCell extends StatelessWidget {
   final bool played;
   final bool today;
   final bool future;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    return Container(
-      height: height,
-      margin: const EdgeInsets.all(2),
-      decoration: BoxDecoration(
-        color: today ? c.elevated : null,
+    return Padding(
+      padding: const EdgeInsets.all(2),
+      child: Material(
+        color: today ? c.elevated : Colors.transparent,
         borderRadius: BorderRadius.circular(6),
+        child: InkWell(
+          key: ValueKey('day-${day.day}'),
+          borderRadius: BorderRadius.circular(6),
+          onTap: onTap,
+          child: _content(c),
+        ),
       ),
+    );
+  }
+
+  Widget _content(AppColors c) {
+    return SizedBox(
+      height: height,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

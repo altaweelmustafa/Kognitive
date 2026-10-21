@@ -30,6 +30,7 @@ class ApothecaryGame extends FlameGame {
     required this.colours,
     this.onPoured,
     this.onSolved,
+    this.onSelect,
   }) : _start = Apothecary.copy(puzzle.bottles),
        state = Apothecary.copy(puzzle.bottles);
 
@@ -38,6 +39,9 @@ class ApothecaryGame extends FlameGame {
   /// After every pour, once it has finished animating.
   final VoidCallback? onPoured;
   final VoidCallback? onSolved;
+
+  /// When a bottle is picked up or put down.
+  final VoidCallback? onSelect;
 
   final List<List<int>> _start;
 
@@ -126,6 +130,7 @@ class ApothecaryGame extends FlameGame {
     if (selected case final old?) bottles[old].lifted = false;
     selected = index;
     if (index != null) bottles[index].lifted = true;
+    onSelect?.call();
   }
 
   void _startPour(int from, int to) {

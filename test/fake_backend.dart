@@ -85,6 +85,23 @@ class FakeBackend {
         ? <String, dynamic>{}
         : jsonDecode(request.body) as Map<String, dynamic>;
 
+    // A day on the calendar: one session game and two Quick Math runs.
+    if (path.startsWith('/me/day/')) {
+      final day = path.substring('/me/day/'.length);
+      final played = day == '2026-10-12';
+      return _json({
+        'day': day,
+        'kpi': played ? 1012.5 : null,
+        'games': [
+          if (played)
+            {'game_id': 'memory-matrix', 'domain': 'memory', 'score': 1012.5},
+        ],
+        'quick_math': {'runs': played ? 2 : 0, 'best': played ? 27 : null},
+        'chess_solved': 0,
+        'sudoku_solved': {'easy': played ? 1 : 0, 'medium': 0, 'hard': 0},
+      });
+    }
+
     switch (path) {
       case '/auth/signup':
         account = body;

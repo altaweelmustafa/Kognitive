@@ -17,7 +17,6 @@ class BrainScreen extends StatelessWidget {
 
   /// Top of the KPI bar scale.
   static const kpiScaleMax = 1800;
-  static const _weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   @override
   Widget build(BuildContext context) {
@@ -59,10 +58,7 @@ class BrainScreen extends StatelessWidget {
             ),
           )
         else
-          KpiHistoryChart(
-            values: [for (final p in history) p.score],
-            labels: [for (final p in history) _weekdays[p.day.weekday - 1]],
-          ),
+          KpiHistoryChart(history: history),
         const SizedBox(height: 28),
         const Divider(),
         const SizedBox(height: 16),

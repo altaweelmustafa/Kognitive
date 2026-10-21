@@ -146,3 +146,44 @@ class Performance {
   final int mathGames;
   final int? mathAccuracy;
 }
+
+/// One session game played on a day, and its score.
+typedef DayGame = ({String gameId, CognitiveDomain domain, double score});
+
+/// Everything the player did on one day, for a tap on the calendar.
+class DaySummary {
+  DaySummary.fromJson(Map<String, dynamic> j)
+    : day = DateTime.parse(j['day'] as String),
+      kpi = (j['kpi'] as num?)?.toDouble(),
+      games = [
+        for (final g in j['games'] as List)
+          (
+            gameId: g['game_id'] as String,
+            domain: CognitiveDomain.values.byName(g['domain'] as String),
+            score: (g['score'] as num).toDouble(),
+          ),
+      ],
+      mathRuns = j['quick_math']['runs'] as int,
+      mathBest = j['quick_math']['best'] as int?,
+      chessSolved = j['chess_solved'] as int,
+      sudokuSolved = {
+        for (final d in SudokuDifficulty.values)
+          d: (j['sudoku_solved'] as Map<String, dynamic>)[d.name] as int,
+      };
+
+  final DateTime day;
+
+  /// That day's KPI, from the session games. Null if none was played.
+  final double? kpi;
+  final List<DayGame> games;
+  final int mathRuns;
+  final int? mathBest;
+  final int chessSolved;
+  final Map<SudokuDifficulty, int> sudokuSolved;
+
+  bool get isEmpty =>
+      games.isEmpty &&
+      mathRuns == 0 &&
+      chessSolved == 0 &&
+      sudokuSolved.values.every((n) => n == 0);
+}

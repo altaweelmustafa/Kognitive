@@ -10,7 +10,9 @@ import '../../theme/app_text.dart';
 import '../../widgets/detail_scaffold.dart';
 import '../../widgets/pill_button.dart';
 import '../shared/session_game_views.dart';
+import '../shared/tutorial_frame.dart';
 import 'memory_matrix_logic.dart';
+import 'memory_matrix_tutorial.dart';
 
 enum _Phase { ready, showing, recall, feedback, done }
 
@@ -27,7 +29,11 @@ class MemoryMatrixScreen extends StatefulWidget {
   State<MemoryMatrixScreen> createState() => _MemoryMatrixScreenState();
 }
 
-class _MemoryMatrixScreenState extends State<MemoryMatrixScreen> {
+class _MemoryMatrixScreenState extends State<MemoryMatrixScreen>
+    with TutorialGate {
+  @override
+  String get tutorialId => 'memory-matrix';
+
   late final Random _random = widget.random ?? Random();
   late final ApiClient _api = widget.api ?? ApiClient();
   final _clock = Stopwatch();
@@ -117,6 +123,10 @@ class _MemoryMatrixScreenState extends State<MemoryMatrixScreen> {
           // Already played today, and reached some other way than the Play button.
           _Phase.ready when _playedToday => const [
             PlayedTodayNotice(gameName: 'Memory Matrix'),
+          ],
+          _Phase.ready when showTutorial == null => const [],
+          _Phase.ready when showTutorial! => [
+            MemoryMatrixTutorial(onDone: () => finishTutorial(_startRound)),
           ],
           _Phase.ready => _intro(),
           _Phase.done => _summary(),

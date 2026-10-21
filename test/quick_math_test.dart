@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kognitiv/games/math/quick_math_logic.dart';
 import 'package:kognitiv/games/math/quick_math_screen.dart';
+import 'package:kognitiv/games/math/quick_math_tutorial.dart';
 import 'package:kognitiv/theme/app_theme.dart';
 
 import 'fake_backend.dart';
@@ -48,7 +49,7 @@ void main() {
         home: QuickMathScreen(random: Random(21)),
       ),
     );
-    await tester.tap(find.text('Start'));
+    await tester.tap(find.text('Skip'));
     await tester.pump();
 
     String shown() =>
@@ -101,5 +102,57 @@ void main() {
     await tester.pump(const Duration(seconds: 61));
     await tester.pumpAndSettle();
     expect(backend.mathResult, {'correct': 0, 'answered': 0});
+  });
+
+  testWidgets('the tutorial: one digit, two digits, the clock, then Start', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(428, 926);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final backend = FakeBackend();
+    await backend.install(loggedIn: true);
+    await tester.pumpWidget(
+      MaterialApp(theme: AppTheme.dark, home: QuickMathScreen()),
+    );
+    expect(find.byType(QuickMathTutorial), findsOneWidget);
+
+    Future<void> type(String digits) async {
+      for (final d in digits.split('')) {
+        await tester.tap(find.byKey(ValueKey('key-$d')));
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+    }
+
+    // A wrong answer is shown and moves on.
+    expect(find.text('3 + 4'), findsOneWidget);
+    await type('6');
+    await tester.pumpAndSettle();
+    expect(find.text('It was 7'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 1600));
+    await tester.pumpAndSettle();
+
+    // Two digits: nothing happens after the first, the second checks it.
+    expect(find.text('12 + 9'), findsOneWidget);
+    await type('2');
+    expect(find.text('Two digits'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('key-erase')));
+    await tester.pump();
+    await type('21');
+    await tester.pumpAndSettle();
+    expect(find.text('Right'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 1600));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Beat the clock'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pumpAndSettle();
+    expect(find.text('CORRECT 4'), findsOneWidget);
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Start'));
+    await tester.pump();
+    expect(find.byType(QuickMathTutorial), findsNothing);
+    expect(find.text('CORRECT 0'), findsOneWidget);
   });
 }

@@ -412,3 +412,30 @@ def test_memory_slot_alternates_between_its_two_games(client):
     # Memory Matrix was played yesterday and What's My Name? never: it goes next.
     add_history("memory", "memory-matrix", [900])
     assert client.get("/session/today", headers=auth).json()["games"][0]["game_id"] == "whats-my-name"
+
+
+def test_day_summary_for_the_calendar(client):
+    auth = signed_up(client)
+    today = service.today().isoformat()
+    url = f"/me/day/{today}"
+    assert client.get(url).status_code == 401
+    assert client.get("/me/day/not-a-day", headers=auth).status_code == 422
+
+    trials = [{"nodes": 8, "found": 8, "duration_ms": 4000}] * 8
+    score = client.post("/games/memory-matrix/results", json={"trials": trials}, headers=auth).json()["score"]
+    client.post("/games/quick-math/results", json={"correct": 12, "answered": 15}, headers=auth)
+    client.post("/games/quick-math/results", json={"correct": 20, "answered": 22}, headers=auth)
+
+    day = client.get(url, headers=auth).json()
+    assert day == {
+        "day": today,
+        "kpi": score,
+        "games": [{"game_id": "memory-matrix", "domain": "memory", "score": score}],
+        "quick_math": {"runs": 2, "best": 20},
+        "chess_solved": 0,
+        "sudoku_solved": {"easy": 0, "medium": 0, "hard": 0},
+    }
+
+    # A day with nothing played.
+    empty = client.get("/me/day/2020-01-01", headers=auth).json()
+    assert empty["games"] == [] and empty["kpi"] is None and empty["quick_math"] == {"runs": 0, "best": None}

@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kognitiv/games/apothecary/apothecary_game.dart';
 import 'package:kognitiv/games/apothecary/apothecary_logic.dart';
 import 'package:kognitiv/games/apothecary/apothecary_screen.dart';
+import 'package:kognitiv/games/apothecary/apothecary_tutorial.dart';
 import 'package:kognitiv/theme/app_theme.dart';
 
 import 'fake_backend.dart';
@@ -28,7 +29,7 @@ void main() {
         home: ApothecaryScreen(random: Random(8)),
       ),
     );
-    await tester.tap(find.text('Start'));
+    await tester.tap(find.text('Skip'));
     await tester.pump(); // the level request
     await tester.pump(const Duration(milliseconds: 100));
 
@@ -135,5 +136,77 @@ void main() {
     ], expected);
     expect(find.text('905'), findsOneWidget); // score from the server
     expect(find.text('2 of 3'), findsOneWidget);
+  });
+
+  testWidgets('the tutorial: one pour, a puzzle with an empty bottle, Start', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(428, 926);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final backend = FakeBackend();
+    await backend.install(loggedIn: true);
+    await tester.pumpWidget(
+      MaterialApp(theme: AppTheme.dark, home: ApothecaryScreen()),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byType(ApothecaryTutorial), findsOneWidget);
+
+    ApothecaryGame game() => tester
+        .widget<GameWidget<ApothecaryGame>>(
+          find.byType(GameWidget<ApothecaryGame>),
+        )
+        .game!;
+
+    const frame = Duration(milliseconds: 50);
+    Future<void> tapBottle(int i) async {
+      final origin = tester.getTopLeft(find.byType(GameWidget<ApothecaryGame>));
+      final home = game().bottles[i].home;
+      await tester.tapAt(origin + Offset(home.x, home.y));
+      await tester.pump(frame);
+    }
+
+    Future<void> pour(int from, int to) async {
+      await tapBottle(from);
+      await tapBottle(to);
+      for (var frames = 0; game().busy; frames++) {
+        await tester.pump(frame);
+        expect(frames, lessThan(200), reason: 'a pour never finished');
+      }
+      await tester.pump(frame);
+    }
+
+    expect(find.text('Pick up a bottle'), findsOneWidget);
+    await tapBottle(0);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Now pour'), findsOneWidget);
+    await tapBottle(2);
+    for (var frames = 0; game().busy; frames++) {
+      await tester.pump(frame);
+    }
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Sorted'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 1300));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    // Swap two colours through the empty bottle.
+    expect(find.text('Same colour or empty'), findsOneWidget);
+    await pour(0, 2);
+    await pour(1, 0);
+    await pour(2, 1);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('3 pours. The par was 3.'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 1300));
+    await tester.pump(const Duration(milliseconds: 1000));
+    expect(find.text('Aim for par'), findsOneWidget);
+
+    await tester.tap(find.text('Next'));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Ready?'), findsOneWidget);
+    await tester.tap(find.text('Start'));
+    await tester.pump(); // the level request
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byType(ApothecaryTutorial), findsNothing);
+    expect(find.text('PUZZLE 1 OF 3'), findsOneWidget);
   });
 }

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kognitiv/games/points/points_screen.dart';
+import 'package:kognitiv/games/points/points_tutorial.dart';
 import 'package:kognitiv/theme/app_theme.dart';
 
 import 'fake_backend.dart';
@@ -23,7 +24,7 @@ void main() {
           home: PointsScreen(random: Random(3)),
         ),
       );
-      await tester.tap(find.text('Start'));
+      await tester.tap(find.text('Skip'));
       await tester.pump(); // the level request
       await tester.pump(const Duration(milliseconds: 50));
 
@@ -54,4 +55,56 @@ void main() {
       expect(find.text('Points delivered'), findsOneWidget);
     },
   );
+
+  testWidgets('the tutorial: watch, steer one point, practise, then Start', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(428, 926);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final backend = FakeBackend();
+    await backend.install(loggedIn: true);
+    await tester.pumpWidget(
+      MaterialApp(theme: AppTheme.dark, home: PointsScreen()),
+    );
+    expect(find.byType(PointsTutorial), findsOneWidget);
+
+    Future<void> runUntil(Finder finder) async {
+      for (var frames = 0; finder.evaluate().isEmpty; frames++) {
+        await tester.pump(const Duration(milliseconds: 100));
+        expect(frames, lessThan(400), reason: 'never showed $finder');
+      }
+    }
+
+    expect(find.text('Follow the lines'), findsOneWidget);
+    await runUntil(find.text('Delivered'));
+    await tester.pump(const Duration(milliseconds: 1200));
+
+    // Left alone, the toggles send the 2 to the wrong target.
+    expect(find.text('Flip the toggles'), findsOneWidget);
+    await runUntil(find.text('Wrong target'));
+    await tester.pump(const Duration(milliseconds: 1600));
+    expect(find.text('Try again'), findsOneWidget);
+
+    // Both toggles flipped: the first to the right, the second to the left.
+    await tester.tap(find.byKey(const ValueKey('switch-0')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('switch-2')));
+    await tester.pump();
+    expect(find.text('All set'), findsOneWidget);
+    await runUntil(find.text('Delivered'));
+    await tester.pump(const Duration(milliseconds: 1200));
+
+    expect(find.text('Your turn'), findsOneWidget);
+    await runUntil(find.textContaining('of 3 delivered'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+    expect(find.text('Ready?'), findsOneWidget);
+    await tester.tap(find.text('Start'));
+    await tester.pump(); // the level request
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.byType(PointsTutorial), findsNothing);
+    expect(find.text('Set the toggles'), findsOneWidget);
+  });
 }

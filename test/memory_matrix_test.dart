@@ -6,6 +6,7 @@ import 'package:kognitiv/app.dart';
 import 'package:kognitiv/data/progress.dart';
 import 'package:kognitiv/games/memory_matrix/memory_matrix_logic.dart';
 import 'package:kognitiv/games/memory_matrix/memory_matrix_screen.dart';
+import 'package:kognitiv/games/memory_matrix/memory_matrix_tutorial.dart';
 import 'package:kognitiv/routing/app_router.dart';
 import 'package:kognitiv/routing/routes.dart';
 import 'package:kognitiv/theme/app_theme.dart';
@@ -42,7 +43,7 @@ void main() {
         home: MemoryMatrixScreen(random: Random(7)),
       ),
     );
-    await tester.tap(find.text('Start'));
+    await tester.tap(find.text('Skip'));
     await tester.pump();
 
     Future<void> tap(int cell) async {
@@ -114,10 +115,10 @@ void main() {
     expect(find.text('soon'), findsNWidgets(3));
     await tester.tap(find.text('Start'));
     await tester.pumpAndSettle();
-    expect(find.text('Watch, then recall'), findsOneWidget);
+    expect(find.byType(MemoryMatrixTutorial), findsOneWidget);
 
     // Miss every round straight away.
-    await tester.tap(find.text('Start'));
+    await tester.tap(find.text('Skip'));
     await tester.pump();
     for (var round = 0; round < MemoryMatrix.rounds; round++) {
       await tester.pump(MemoryMatrix.showFor);
@@ -143,14 +144,14 @@ void main() {
     // No replay today: not from the session, the game's page, or its address.
     await tester.tap(find.text('Done for today'));
     await tester.pumpAndSettle();
-    expect(find.text('Watch, then recall'), findsNothing);
+    expect(find.byType(MemoryMatrixTutorial), findsNothing);
 
     appRouter.go(Routes.game('memory-matrix'));
     await tester.pumpAndSettle();
     expect(find.text('Played today'), findsOneWidget);
     await tester.tap(find.text('Played today'));
     await tester.pumpAndSettle();
-    expect(find.text('Watch, then recall'), findsNothing);
+    expect(find.byType(MemoryMatrixTutorial), findsNothing);
 
     appRouter.go(Routes.memoryMatrix);
     await tester.pumpAndSettle();
@@ -164,7 +165,68 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Play'));
     await tester.pumpAndSettle();
-    expect(find.text('Watch, then recall'), findsOneWidget);
-    expect(find.text('Start'), findsOneWidget);
+    expect(find.byType(MemoryMatrixTutorial), findsOneWidget);
+    expect(find.text('Skip'), findsOneWidget);
+  });
+  testWidgets('the tutorial: watch, recall, a miss replays, then Start', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(428, 926);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final backend = FakeBackend();
+    await backend.install(loggedIn: true);
+    await tester.pumpWidget(
+      MaterialApp(theme: AppTheme.dark, home: MemoryMatrixScreen()),
+    );
+
+    Future<void> tap(int cell) async {
+      await tester.tap(find.byKey(ValueKey('tutorial-tile-$cell')));
+      await tester.pump();
+    }
+
+    const pattern = [6, 12, 18];
+    expect(find.text('Watch'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+    expect(find.text('Your turn'), findsOneWidget);
+
+    // A wrong tap shows the pattern again.
+    await tap(pattern[0]);
+    expect(find.text('1 of 3'), findsOneWidget);
+    await tap(0);
+    await tester.pumpAndSettle();
+    expect(find.text('Not that one'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 1300));
+    await tester.pumpAndSettle();
+    expect(find.text('Watch again'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+
+    for (final cell in pattern) {
+      await tap(cell);
+    }
+    await tester.pump(const Duration(milliseconds: 450));
+    await tester.pumpAndSettle(const Duration(milliseconds: 100));
+    expect(find.text('All correct'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
+    expect(find.text('4'), findsOneWidget); // next round has a tile more
+
+    await tester.tap(find.text('Next'));
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+    expect(find.text('One wrong tap'), findsOneWidget);
+    expect(find.text('3'), findsOneWidget); // and a miss, one fewer
+
+    await tester.tap(find.text('Next'));
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+    expect(find.text('Ready?'), findsOneWidget);
+    await tester.tap(find.text('Start'));
+    await tester.pump();
+    expect(find.byType(MemoryMatrixTutorial), findsNothing);
+    expect(find.text('ROUND 1 OF 8'), findsOneWidget);
+    await tester.pump(MemoryMatrix.showFor);
   });
 }

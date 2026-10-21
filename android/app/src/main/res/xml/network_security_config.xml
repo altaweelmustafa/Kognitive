@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The backend is served over plain HTTP on the Tailscale address. -->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">100.105.90.110</domain>
+    </domain-config>
+</network-security-config>
