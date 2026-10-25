@@ -1,6 +1,6 @@
 # Kognitiv games
 
-Five cognitive domains, twelve games. Nine are built; three are planned.
+Five cognitive domains, fourteen games. Eleven are built; three are planned.
 
 The catalog lives in two places that must stay in step:
 `lib/data/games.dart` (app) and `backend/app/brain/catalog.py` (backend).
@@ -17,10 +17,12 @@ The catalog lives in two places that must stay in step:
 | 24 Game | Reasoning & Logic | Planned | Yes | – |
 | Sudoku | Reasoning & Logic | Built | No, play any day | No |
 | Quick Math | Reasoning & Logic | Built | No, play any day | No |
+| Between the Lines | Reasoning & Logic | Built | Yes | Yes |
 | Apothecary | Planning | Built | Yes | Yes |
 | Chess Puzzles | Planning | Built | No, play any day | No |
 | Towers of Stockholm | Flexibility | Built | Yes | Yes |
 | Suit Sort (WCST) | Flexibility | Planned | Yes | – |
+| Quiver | Flexibility | Built | Yes | Yes |
 
 **Daily session:** four games. Memory and Attention are always in; the other
 two slots go to the domains that need it most (see `backend/README.md`).
@@ -110,6 +112,30 @@ One sum at a time with 60 seconds on the clock.
   into the KPI.
 - Code: `lib/games/math/`
 
+### Between the Lines — built
+Inspired by Lumosity's Contextual. Read a short real passage with one word
+taken out, and pick the word that belongs from four.
+- Before each round the player picks a subject: Cybersecurity, Networking,
+  Programming, Medicine, or Art: Novels.
+- Passages are fetched live by the app, not the backend. The four technical
+  subjects use article intros from the Wikipedia API (a few Wikipedia
+  categories per subject, CC BY-SA). Novels use paragraphs from a random point
+  in one of ~36 public-domain books on Project Gutenberg; only a 24 KB slice of
+  each book is downloaded (HTTP byte range).
+- The gap is a content word after the first sentence, never one repeated in
+  the passage. Wrong choices share its ending (-ing, -ed, -s…): two from other
+  passages on the subject, the rest everyday words.
+- 10 passages a round. In the game, 100 points a right answer plus up to 50
+  for speed (full within 5 s, none after 25 s).
+- **Score:** 1000 times the share of gaps filled right, plus up to 200 for
+  the share of the speed bonus earned: 1200 for ten right, all fast. A short
+  offline round counts the same.
+- The Reasoning slot's session game (Sudoku and Quick Math stay outside the
+  session).
+- If the sources can't be reached, a short round uses passages built into the
+  app (`lines_fallback.dart`).
+- Code: `lib/games/between_lines/`
+
 ## Planning
 
 ### Apothecary — built
@@ -157,3 +183,23 @@ A card version of the Wisconsin Card Sorting Test. The player sorts cards onto
 piles by a hidden rule (suit, colour or number) and is only told "right" or
 "wrong". After a run of correct sorts the rule changes without warning, and the
 player has to notice and switch.
+
+### Quiver — built
+Inspired by Lumosity's Ebb and Flow: a task-switching game. A field of arrows
+drifts across the board, all pointing one way and moving one way.
+- **Green arrows:** swipe the way they point. **Red arrows:** swipe the way
+  they move. Arrow keys work on desktop.
+- 45 seconds. In the game, 25 points a right answer, times a multiplier that
+  rises by one every four right in a row (up to ×5); a wrong answer resets it
+  and locks the board for a moment.
+- **Score:** speed times accuracy, 1000 × (right ÷ 36) × (right ÷ answered):
+  36 right with none wrong scores 1000. Guessing is scaled down by accuracy.
+- Shares the Flexibility slot with Towers of Stockholm: whichever was played
+  less recently.
+- Harder as the player gets more right: more arrows (1–2 up to 3–6), faster
+  drift, and more often pointing one way while moving another.
+- Between trials each arrow turns with a little physics: the weight is in the
+  tip, which swings to the new direction on an underdamped spring, the shaft
+  follows the tip's path so it bends like a whip, and the new colour runs from
+  tip to tail. Art: `assets/quiver/`.
+- Code: `lib/games/quiver/`

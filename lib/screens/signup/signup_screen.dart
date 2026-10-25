@@ -6,6 +6,7 @@ import '../../data/api_client.dart';
 import '../../data/session.dart';
 import '../../theme/app_text.dart';
 import '../../widgets/detail_scaffold.dart';
+import '../../widgets/kognitiv_logo.dart';
 import '../../widgets/otp_field.dart';
 import '../../widgets/pill_button.dart';
 
@@ -163,7 +164,9 @@ class _SignupScreenState extends State<SignupScreen> {
       child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 31),
         children: [
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
+          const Center(child: KognitivLogo(width: 84)),
+          const SizedBox(height: 24),
           Padding(
             padding: const EdgeInsets.only(left: 18),
             child: Text(_question, style: AppText.sectionTitle),

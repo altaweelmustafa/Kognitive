@@ -8,6 +8,8 @@ from fastapi.testclient import TestClient
 from app import config, db
 from app.brain import model, service
 from app.brain.router import (
+    lines_score,
+    quiver_score,
     ApothecaryTrial,
     apothecary_score,
     MatrixTrial,
@@ -167,8 +169,10 @@ def test_new_player_gets_a_full_session(client):
     auth = signed_up(client)
     games = client.get("/session/today", headers=auth).json()["games"]
     assert len(games) == 4 and len({g["domain"] for g in games}) == 4
-    # The two free slots go to the domains that have a playable game.
-    assert {g["game_id"] for g in games[2:]} == {"towers-of-stockholm", "apothecary"}
+    # The two free slots go to domains that have a playable game: two of
+    # Reasoning, Planning and Flexibility, each with its first game.
+    assert {g["game_id"] for g in games[2:]} < {"between-the-lines", "apothecary", "towers-of-stockholm"}
+    assert all(g["playable"] for g in games)
     assert [g["why"] for g in games] == ["Always included", "Always included", "No data yet", "No data yet"]
 
 
@@ -359,6 +363,42 @@ def test_quick_math(client):
     # It never takes a session slot or feeds the KPI.
     assert client.get("/me/performance", headers=auth).json()["overall"] is None
     assert "quick-math" not in [g["game_id"] for g in client.get("/session/today", headers=auth).json()["games"]]
+
+
+def test_quiver(client):
+    assert quiver_score(36, 36) == 1000
+    assert quiver_score(36, 48) == 750  # same speed, a quarter wrong
+    assert quiver_score(18, 18) == 500  # clean but half as fast
+    assert quiver_score(0, 0) == 0
+
+    auth = signed_up(client)
+    url = "/games/quiver/results"
+    assert client.post(url, json={"score": 100, "correct": 5, "answered": 4}, headers=auth).status_code == 422
+    assert client.post(url, json={"score": 10000, "correct": 5, "answered": 5}, headers=auth).status_code == 422
+    assert client.post(url, json={"score": 900, "correct": 36, "answered": 36}).status_code == 401
+    r = client.post(url, json={"score": 2400, "correct": 36, "answered": 36}, headers=auth)
+    assert r.status_code == 201 and r.json() == {"score": 1000}
+    # A session game: once a day, and it feeds Flexibility.
+    assert client.post(url, json={"score": 0, "correct": 0, "answered": 3}, headers=auth).status_code == 409
+    domains = client.get("/me/performance", headers=auth).json()["domains"]
+    assert domains["flexibility"]["history"][-1]["score"] == 1000
+
+
+def test_between_the_lines(client):
+    assert lines_score(10, 10, 1500) == 1200  # all right, all fast
+    assert lines_score(10, 10, 1000) == 1000  # all right, no bonus
+    assert lines_score(3, 3, 300) == 1000  # a short offline round counts the same
+    assert lines_score(5, 10, 625) == 550
+
+    auth = signed_up(client)
+    url = "/games/between-the-lines/results"
+    body = {"category": "medicine", "score": 820, "correct": 7, "answered": 10}
+    assert client.post(url, json={**body, "category": "astrology"}, headers=auth).status_code == 422
+    assert client.post(url, json={**body, "score": 1100}, headers=auth).status_code == 422  # > 7 × 150
+    assert client.post(url, json={**body, "score": 600}, headers=auth).status_code == 422  # < 7 × 100
+    assert client.post(url, json=body, headers=auth).json() == {"score": 748.0}
+    domains = client.get("/me/performance", headers=auth).json()["domains"]
+    assert domains["reasoning"]["history"][-1]["score"] == 748
 
 
 def test_apothecary(client):

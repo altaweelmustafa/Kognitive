@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Almost black, behind the fox on the app icon and splash screen. -->
+    <color name="brand_background">#0E0E11</color>
+</resources>

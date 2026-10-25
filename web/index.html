@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Replaced by `flutter build web --base-href`. -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Kognitiv: solo cognitive training. A few games a day for memory, attention, reasoning, planning and flexibility.">
+  <meta name="theme-color" content="#0E0E11">
+
+  <!-- iOS -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Kognitiv">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="manifest" href="manifest.json">
+  <title>Kognitiv</title>
+
+  <style>
+    html, body { margin: 0; height: 100%; background: #0E0E11; }
+    /* Shown until Flutter draws its first frame. */
+    #splash {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 250ms ease-out;
+    }
+    #splash img { width: 140px; animation: breathe 1.6s ease-in-out infinite; }
+    #splash.gone { opacity: 0; pointer-events: none; }
+    @keyframes breathe { 50% { transform: scale(0.94); opacity: 0.8; } }
+  </style>
+</head>
+<body>
+  <div id="splash"><img src="splash/logo.png" alt="Kognitiv"></div>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var splash = document.getElementById('splash');
+      splash.classList.add('gone');
+      setTimeout(function () { splash.remove(); }, 300);
+    });
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

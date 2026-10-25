@@ -27,14 +27,18 @@ flutter:
     - assets/chess/pieces/
     - assets/faces/
     - assets/game_banners/
+    - assets/game_icons/Between_the_Lines.png
     - assets/game_icons/Magic_Sort.png
     - assets/game_icons/Memory_Matrix.png
     - assets/game_icons/Points_of_Thought.png
     - assets/game_icons/Quick_Math.png
+    - assets/game_icons/Quiver.png
     - assets/game_icons/Sudoku.png
     - assets/game_icons/Towers_of_Stockholm.png
     - assets/game_icons/Whats_My_Name.png
     - assets/game_icons/chess.png
+    - assets/logo/
+    - assets/quiver/
 
   fonts:
     - family: Zilla Slab

@@ -233,6 +233,80 @@ def quick_math_result(body: QuickMathResult, user=Depends(current_user)):
     return service.record_quick_math(user["id"], body.correct, body.answered)
 
 
+QUIVER_SECONDS = 45
+QUIVER_MAX_POINTS = 125  # base 25 at the top multiplier, ×5
+QUIVER_STRONG_RUN = 36  # right answers in 45 seconds that make a 1000
+LINES_QUESTIONS = 10
+LINES_BONUS = 50  # most speed bonus one answer can earn
+LINES_CATEGORIES = ("cybersecurity", "networking", "programming", "medicine", "novels")
+
+
+class QuiverResult(BaseModel):
+    score: int = Field(ge=0)  # the points shown in the game
+    correct: int = Field(ge=0, le=QUIVER_SECONDS * 6)  # no one swipes faster than 6 a second
+    answered: int = Field(ge=0, le=QUIVER_SECONDS * 6)
+
+    @model_validator(mode="after")
+    def _fits(self):
+        if self.correct > self.answered:
+            raise ValueError("correct cannot exceed answered")
+        if self.score > self.correct * QUIVER_MAX_POINTS:
+            raise ValueError("score is more than the answers could earn")
+        return self
+
+
+def quiver_score(correct: int, answered: int) -> float:
+    """Speed times accuracy: 1000 for 36 right answers in the 45 seconds
+    with none wrong. Guessing doesn't pay, since accuracy scales it down."""
+    if answered == 0:
+        return 0.0
+    return round(1000 * correct / QUIVER_STRONG_RUN * correct / answered, 1)
+
+
+@router.post("/games/quiver/results", status_code=201)
+def quiver_result(body: QuiverResult, user=Depends(current_user)):
+    return _record(
+        user,
+        "quiver",
+        quiver_score(body.correct, body.answered),
+        body.model_dump(),
+    )
+
+
+class LinesResult(BaseModel):
+    category: str
+    score: int = Field(ge=0)  # the points shown in the game, bonuses included
+    correct: int = Field(ge=0, le=LINES_QUESTIONS)
+    answered: int = Field(ge=1, le=LINES_QUESTIONS)
+
+    @model_validator(mode="after")
+    def _fits(self):
+        if self.category not in LINES_CATEGORIES:
+            raise ValueError("unknown category")
+        if self.correct > self.answered:
+            raise ValueError("correct cannot exceed answered")
+        if not 100 * self.correct <= self.score <= (100 + LINES_BONUS) * self.correct:
+            raise ValueError("score doesn't match the right answers")
+        return self
+
+
+def lines_score(correct: int, answered: int, score: int) -> float:
+    """1000 for every gap filled right, plus up to 200 for speed: the share
+    of the speed bonus earned. A short round (offline) counts the same."""
+    bonus = score - 100 * correct
+    return round(1000 * correct / answered + 200 * bonus / (LINES_BONUS * answered), 1)
+
+
+@router.post("/games/between-the-lines/results", status_code=201)
+def lines_result(body: LinesResult, user=Depends(current_user)):
+    return _record(
+        user,
+        "between-the-lines",
+        lines_score(body.correct, body.answered, body.score),
+        body.model_dump(),
+    )
+
+
 @router.get("/me/performance")
 def performance(user=Depends(current_user)):
     return service.performance(user["id"])

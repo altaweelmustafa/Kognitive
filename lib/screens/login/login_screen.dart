@@ -5,6 +5,7 @@ import '../../data/api_client.dart';
 import '../../data/session.dart';
 import '../../theme/app_text.dart';
 import '../../widgets/detail_scaffold.dart';
+import '../../widgets/kognitiv_logo.dart';
 import '../../widgets/pill_button.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -56,7 +57,9 @@ class _LoginScreenState extends State<LoginScreen> {
       child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 31),
         children: [
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
+          const Center(child: KognitivLogo(width: 84)),
+          const SizedBox(height: 24),
           _label('Email'),
           _field(
             _email,

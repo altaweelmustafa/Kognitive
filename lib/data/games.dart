@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/cognitive_domain.dart';
 import '../models/game.dart';
 
-/// The full catalog: 5 domains, 12 games. Described in GAMES.md.
+/// The full catalog: 5 domains, 14 games. Described in GAMES.md.
 const games = <Game>[
   Game(
     id: 'memory-matrix',
@@ -99,6 +99,22 @@ const games = <Game>[
     tagline: 'Sixty seconds. As many sums as you can.',
     inSessions: false,
     image: 'assets/game_icons/Quick_Math.png',
+  ),
+  Game(
+    id: 'quiver',
+    name: 'Quiver',
+    domain: CognitiveDomain.flexibility,
+    icon: Icons.north_east_rounded,
+    tagline: 'Green arrows: where they point. Red arrows: where they go.',
+    image: 'assets/game_icons/Quiver.png',
+  ),
+  Game(
+    id: 'between-the-lines',
+    name: 'Between the Lines',
+    domain: CognitiveDomain.reasoning,
+    icon: Icons.short_text_rounded,
+    tagline: 'Read real passages and pick the word that belongs in the gap.',
+    image: 'assets/game_icons/Between_the_Lines.png',
   ),
 ];
 

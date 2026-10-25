@@ -23,8 +23,10 @@ GAMES = (
     Game("odd-one-out", "attention"),
     Game("points-of-thought", "attention", playable=True),
     Game("24-game", "reasoning"),
+    Game("between-the-lines", "reasoning", playable=True),
     Game("apothecary", "planning", playable=True),
     Game("towers-of-stockholm", "flexibility", playable=True),
+    Game("quiver", "flexibility", playable=True),
     Game("suit-sort", "flexibility"),
     # Played any day, never part of a session and not scored into the KPI.
     Game("sudoku", "reasoning", in_sessions=False),

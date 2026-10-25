@@ -24,6 +24,8 @@ class FakeBackend {
   bool replaysAllowed = false;
   List<Map<String, dynamic>>? towersTrials;
   Map<String, dynamic>? mathResult;
+  Map<String, dynamic>? quiverResult;
+  Map<String, dynamic>? linesResult;
 
   /// What's My Name?: every answer the app sent, with how it was judged.
   final namesAnswers = <Map<String, dynamic>>[];
@@ -324,6 +326,12 @@ class FakeBackend {
       case '/games/quick-math/results':
         mathResult = body;
         return _json({'best': 31, 'new_best': false}, 201);
+      case '/games/quiver/results':
+        quiverResult = body;
+        return _json({'score': 812.5}, 201);
+      case '/games/between-the-lines/results':
+        linesResult = body;
+        return _json({'score': 1080.0}, 201);
       case '/games/points-of-thought/level':
         return _json({'level': 3});
       case '/games/points-of-thought/results':

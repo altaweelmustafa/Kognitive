@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../config/color_config.dart';
 import '../../data/session.dart';
+import '../../routing/routes.dart';
 import '../../theme/app_text.dart';
 import '../../widgets/detail_scaffold.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
-  static const _items = [
-    'Account',
-    'Daily reminder',
-    'Sound',
-    'About Kognitiv',
-  ];
+  /// Not built yet, so not tappable.
+  static const _items = ['Account', 'Daily reminder', 'Sound'];
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +38,23 @@ class SettingsScreen extends StatelessWidget {
             ),
             const Divider(),
           ],
+          GestureDetector(
+            key: const ValueKey('settings-about'),
+            behavior: HitTestBehavior.opaque,
+            onTap: () => context.push(Routes.about),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Text('About Kognitiv', style: AppText.listTitle),
+                  ),
+                  Icon(Icons.chevron_right_rounded, color: c.textMuted),
+                ],
+              ),
+            ),
+          ),
+          const Divider(),
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             // The router sends a logged-out player to the start screen.

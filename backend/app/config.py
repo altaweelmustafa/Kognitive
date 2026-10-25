@@ -16,6 +16,9 @@ ALLOW_REPLAYS = os.environ.get("KOGNITIV_ALLOW_REPLAYS", "1") != "0"
 # Library articles: one Markdown file each.
 CONTENT_DIR = Path(os.environ.get("KOGNITIV_CONTENT", _ROOT / "content"))
 
+# The website: the Flutter web build, put here by scripts/deploy_web.sh.
+WEB_DIR = Path(os.environ.get("KOGNITIV_WEB", _ROOT / "web"))
+
 # Email for verification codes. Until SMTP_USER and SMTP_PASSWORD are set, no
 # email is sent and the code is returned to the app instead (development only).
 SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")

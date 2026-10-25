@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../data/games.dart';
 import '../data/session.dart';
 import '../games/apothecary/apothecary_screen.dart';
+import '../games/between_lines/lines_screen.dart';
 import '../games/chess/chess_puzzle_screen.dart';
 import '../games/math/quick_math_screen.dart';
 import '../games/memory_matrix/memory_matrix_screen.dart';
@@ -11,7 +12,9 @@ import '../games/sudoku/sudoku_screen.dart';
 import '../games/towers/towers_screen.dart';
 import '../games/names/names_screen.dart';
 import '../games/points/points_screen.dart';
+import '../games/quiver/quiver_screen.dart';
 import '../models/cognitive_domain.dart';
+import '../screens/about/about_screen.dart';
 import '../screens/brain/brain_screen.dart';
 import '../screens/game_detail/game_detail_screen.dart';
 import '../screens/games/domain_games_screen.dart';
@@ -74,12 +77,18 @@ final appRouter = GoRouter(
       builder: (_, _) => const ApothecaryScreen(),
     ),
     GoRoute(path: Routes.quickMath, builder: (_, _) => const QuickMathScreen()),
+    GoRoute(path: Routes.quiver, builder: (_, _) => const QuiverScreen()),
+    GoRoute(
+      path: Routes.betweenTheLines,
+      builder: (_, _) => const LinesScreen(),
+    ),
     GoRoute(
       path: Routes.memoryMatrix,
       builder: (_, _) => const MemoryMatrixScreen(),
     ),
     GoRoute(path: Routes.session, builder: (_, _) => const SessionScreen()),
     GoRoute(path: Routes.settings, builder: (_, _) => const SettingsScreen()),
+    GoRoute(path: Routes.about, builder: (_, _) => const AboutScreen()),
     GoRoute(
       path: '/game/:id',
       builder: (_, s) =>

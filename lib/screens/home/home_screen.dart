@@ -215,22 +215,25 @@ class _MoreGameRow extends StatelessWidget {
               ],
             ),
             const SizedBox(width: 9),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(game.name, style: AppText.listTitle),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    DomainLabel(game.domain, mono: true),
-                    if (dailySolved)
-                      Text(
-                        ' · Daily solved',
-                        style: AppText.mono12.copyWith(color: c.improving),
-                      ),
-                  ],
-                ),
-              ],
+            // Takes the rest of the row, so a long name wraps.
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(game.name, style: AppText.listTitle),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      DomainLabel(game.domain, mono: true),
+                      if (dailySolved)
+                        Text(
+                          ' · Daily solved',
+                          style: AppText.mono12.copyWith(color: c.improving),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
