@@ -3,10 +3,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../config/color_config.dart';
 import '../../data/api_client.dart';
+import '../../data/favorites.dart';
 import '../../data/library_api.dart';
 import '../../models/library_article.dart';
 import '../../routing/routes.dart';
 import '../../theme/app_text.dart';
+import '../../widgets/bookmark_button.dart';
 import '../../widgets/search_field.dart';
 
 class LibraryScreen extends StatefulWidget {
@@ -18,6 +20,7 @@ class LibraryScreen extends StatefulWidget {
 
 class _LibraryScreenState extends State<LibraryScreen> {
   LibraryCategory? _filter; // null = all
+  bool _savedOnly = false;
   String _query = '';
   List<LibraryArticle>? _articles; // null = not loaded yet
   String? _error;
@@ -26,6 +29,19 @@ class _LibraryScreenState extends State<LibraryScreen> {
   void initState() {
     super.initState();
     _load();
+    Favorites.instance.load();
+  }
+
+  Future<void> _toggleSaved(String id) async {
+    try {
+      await Favorites.instance.toggle(id);
+    } on ApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    }
   }
 
   Future<void> _load() async {
@@ -40,17 +56,32 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: Favorites.instance,
+      builder: (context, _) => _build(context),
+    );
+  }
+
+  Widget _build(BuildContext context) {
     final c = context.colors;
+    final saved = Favorites.instance;
     // Every word typed must appear in the title, summary or category.
     final words = _query
         .toLowerCase()
         .split(RegExp(r'\s+'))
         .where((w) => w.isNotEmpty);
-    final articles = (_articles ?? const <LibraryArticle>[]).where((a) {
+    var articles = (_articles ?? const <LibraryArticle>[]).where((a) {
       if (_filter != null && a.category != _filter) return false;
+      if (_savedOnly && !saved.contains(a.id)) return false;
       final text = '${a.title} ${a.summary} ${a.category.label}'.toLowerCase();
       return words.every(text.contains);
     }).toList();
+    // Saved ones in the order they were saved, newest first.
+    if (_savedOnly) {
+      articles.sort(
+        (a, b) => saved.ids.indexOf(a.id).compareTo(saved.ids.indexOf(b.id)),
+      );
+    }
 
     return SafeArea(
       bottom: false,
@@ -80,10 +111,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 18),
-                      itemCount: LibraryCategory.values.length,
+                      itemCount: LibraryCategory.values.length + 1,
                       separatorBuilder: (_, _) => const SizedBox(width: 12),
                       itemBuilder: (context, i) {
-                        final category = LibraryCategory.values[i];
+                        if (i == 0) {
+                          return _SavedChip(
+                            selected: _savedOnly,
+                            count: saved.ids.length,
+                            onTap: () =>
+                                setState(() => _savedOnly = !_savedOnly),
+                          );
+                        }
+                        final category = LibraryCategory.values[i - 1];
                         return _CategoryChip(
                           category: category,
                           selected: _filter == category,
@@ -133,12 +172,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         horizontal: 27,
                         vertical: 24,
                       ),
-                      child: Text(
-                        _query.trim().isEmpty
-                            ? 'Nothing here yet.'
-                            : 'No articles match "${_query.trim()}".',
-                        style: AppText.body.copyWith(color: c.textSecondary),
-                      ),
+                      child: Text(switch ((_savedOnly, _query.trim())) {
+                        (true, '') =>
+                          'Nothing saved yet. Tap the bookmark on an '
+                              'article to keep it here.',
+                        (_, '') => 'Nothing here yet.',
+                        (_, final q) => 'No articles match "$q".',
+                      }, style: AppText.body.copyWith(color: c.textSecondary)),
                     ),
                 ],
               ),
@@ -151,11 +191,58 @@ class _LibraryScreenState extends State<LibraryScreen> {
               itemBuilder: (context, i) => _ArticleCard(
                 key: ValueKey(articles[i].id),
                 article: articles[i],
+                saved: saved.contains(articles[i].id),
+                onToggleSaved: () => _toggleSaved(articles[i].id),
                 onTap: () => context.push(Routes.article(articles[i].id)),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Filters to the articles the player saved.
+class _SavedChip extends StatelessWidget {
+  const _SavedChip({
+    required this.selected,
+    required this.count,
+    required this.onTap,
+  });
+
+  final bool selected;
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return GestureDetector(
+      key: const ValueKey('saved-filter'),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: c.elevated,
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(color: selected ? c.textPrimary : c.elevated),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              selected ? Icons.bookmark : Icons.bookmark_border,
+              size: 14,
+              color: c.brandAccent,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              count == 0 ? 'Saved' : 'Saved · $count',
+              style: AppText.label.copyWith(fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -210,9 +297,17 @@ class _CategoryChip extends StatelessWidget {
 /// Colored pane: category + reading time, title, summary, and an oversized
 /// icon bleeding off the corner.
 class _ArticleCard extends StatelessWidget {
-  const _ArticleCard({super.key, required this.article, required this.onTap});
+  const _ArticleCard({
+    super.key,
+    required this.article,
+    required this.saved,
+    required this.onToggleSaved,
+    required this.onTap,
+  });
 
   final LibraryArticle article;
+  final bool saved;
+  final VoidCallback onToggleSaved;
   final VoidCallback onTap;
 
   @override
@@ -255,6 +350,13 @@ class _ArticleCard extends StatelessWidget {
                       Text(article.category.label.toUpperCase(), style: meta),
                       const Spacer(),
                       Text('${article.minutes} MIN READ', style: meta),
+                      const SizedBox(width: 6),
+                      BookmarkButton(
+                        key: ValueKey('save-${article.id}'),
+                        saved: saved,
+                        color: ink,
+                        onTap: onToggleSaved,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),

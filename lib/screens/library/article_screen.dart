@@ -3,9 +3,11 @@ import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 
 import '../../config/color_config.dart';
 import '../../data/api_client.dart';
+import '../../data/favorites.dart';
 import '../../data/library_api.dart';
 import '../../models/library_article.dart';
 import '../../theme/app_text.dart';
+import '../../widgets/bookmark_button.dart';
 import '../../widgets/detail_scaffold.dart';
 
 /// One article, written in Markdown on the backend.
@@ -26,6 +28,25 @@ class _ArticleScreenState extends State<ArticleScreen> {
   void initState() {
     super.initState();
     _load();
+    if (!Favorites.instance.loaded) Favorites.instance.load();
+  }
+
+  Future<void> _toggleSaved() async {
+    final saving = !Favorites.instance.contains(widget.id);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await Favorites.instance.toggle(widget.id);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            saving ? 'Saved to your library' : 'Removed from saved',
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } on ApiException catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    }
   }
 
   Future<void> _load() async {
@@ -59,6 +80,16 @@ class _ArticleScreenState extends State<ArticleScreen> {
     );
     return DetailScaffold(
       title: 'Library',
+      action: ListenableBuilder(
+        listenable: Favorites.instance,
+        builder: (context, _) => BookmarkButton(
+          key: const ValueKey('article-save'),
+          saved: Favorites.instance.contains(widget.id),
+          color: c.brandAccent,
+          size: 26,
+          onTap: _toggleSaved,
+        ),
+      ),
       child: ListView(
         padding: const EdgeInsets.fromLTRB(27, 12, 27, 32),
         children: [

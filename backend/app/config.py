@@ -19,6 +19,15 @@ CONTENT_DIR = Path(os.environ.get("KOGNITIV_CONTENT", _ROOT / "content"))
 # The website: the Flutter web build, put here by scripts/deploy_web.sh.
 WEB_DIR = Path(os.environ.get("KOGNITIV_WEB", _ROOT / "web"))
 
+# Notifications (Web Push). The key pair is made on first use, next to the
+# database. Push services want a contact for the sender: set
+# KOGNITIV_VAPID_SUBJECT to a mailto: or https: address you control.
+VAPID_KEY_FILE = Path(os.environ.get("KOGNITIV_VAPID_KEY", DB_PATH.parent / "vapid_private.pem"))
+VAPID_SUBJECT = os.environ.get("KOGNITIV_VAPID_SUBJECT", "mailto:admin@example.com")
+# How often the reminder loop looks for reminders that are due, in seconds.
+# 0 turns the loop off (tests).
+REMINDER_INTERVAL = int(os.environ.get("KOGNITIV_REMINDER_INTERVAL", "60"))
+
 # Email for verification codes. Until SMTP_USER and SMTP_PASSWORD are set, no
 # email is sent and the code is returned to the app instead (development only).
 SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")

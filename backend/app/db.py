@@ -88,6 +88,30 @@ CREATE TABLE IF NOT EXISTS quick_math_attempts (
     answered  INTEGER NOT NULL,
     played_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+-- Library articles a player has saved, newest first by saved_at.
+CREATE TABLE IF NOT EXISTS library_favorites (
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    article_id TEXT NOT NULL,
+    saved_at   TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (user_id, article_id)
+);
+-- A browser that agreed to receive notifications (Web Push), one per device.
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+    endpoint   TEXT PRIMARY KEY,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    p256dh     TEXT NOT NULL,
+    auth       TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+-- The daily reminder: a notification at the player's chosen local time if
+-- today's session isn't finished.
+CREATE TABLE IF NOT EXISTS reminders (
+    user_id       INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    enabled       INTEGER NOT NULL DEFAULT 0,
+    time          TEXT NOT NULL DEFAULT '19:00',   -- HH:MM, local
+    timezone      TEXT NOT NULL DEFAULT 'UTC',     -- IANA name
+    last_sent_day TEXT                             -- local date, YYYY-MM-DD
+);
 -- What's My Name?: one card per person a player has met, on an SM-2 schedule.
 CREATE TABLE IF NOT EXISTS names_cards (
     user_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -135,6 +159,10 @@ CREATE TABLE IF NOT EXISTS session_plans (
 MIGRATIONS = [
     ("chess_attempts", "user_id", "INTEGER REFERENCES users(id)"),
     ("sudoku_attempts", "user_id", "INTEGER REFERENCES users(id)"),
+    # Profile photo: a small square PNG or JPEG. The version goes up with each
+    # change, so apps know when to fetch it again; 0 means none.
+    ("users", "avatar", "BLOB"),
+    ("users", "avatar_version", "INTEGER NOT NULL DEFAULT 0"),
 ]
 
 

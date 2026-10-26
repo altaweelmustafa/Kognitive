@@ -1,5 +1,7 @@
 """Accounts: sign up with an emailed code, log in, profile, activity."""
 
+import base64
+import binascii
 import hmac
 from datetime import UTC, date, datetime, timedelta
 from typing import Literal
@@ -48,6 +50,18 @@ class ProfileIn(BaseModel):
     gender: Gender | None = None
 
 
+class PasswordIn(BaseModel):
+    current: str = Field(max_length=200)
+    new: str = Field(min_length=8, max_length=200)
+
+
+class AvatarIn(BaseModel):
+    image: str  # base64 PNG or JPEG, already cropped and shrunk by the app
+
+
+AVATAR_MAX_BYTES = 512 * 1024
+
+
 def _now() -> datetime:
     return datetime.now(UTC)
 
@@ -59,6 +73,7 @@ def _user_out(row) -> dict:
         "gender": row["gender"],
         "email": row["email"],
         "created_at": row["created_at"],
+        "avatar_version": row["avatar_version"],
     }
 
 
@@ -197,6 +212,67 @@ def update_me(body: ProfileIn, user=Depends(current_user)):
             (body.name.strip() if body.name else None, body.gender, user["id"]),
         )
         return _user_out(conn.execute("SELECT * FROM users WHERE id = ?", (user["id"],)).fetchone())
+
+
+@router.post("/me/password")
+def change_password(
+    body: PasswordIn,
+    user=Depends(current_user),
+    cred: HTTPAuthorizationCredentials = Depends(_bearer),
+):
+    """Needs the current password. Signs out every other device; this one
+    stays logged in."""
+    if not security.check_password(body.current, user["password_hash"]):
+        raise HTTPException(400, "Your current password isn't right.")
+    with db.connect() as conn:
+        conn.execute(
+            "UPDATE users SET password_hash = ? WHERE id = ?",
+            (security.hash_password(body.new), user["id"]),
+        )
+        conn.execute(
+            "DELETE FROM sessions WHERE user_id = ? AND token_hash != ?",
+            (user["id"], security.digest(cred.credentials)),
+        )
+    return {"ok": True}
+
+
+@router.get("/me/avatar")
+def get_avatar(user=Depends(current_user)):
+    image = user["avatar"]
+    return {
+        "version": user["avatar_version"],
+        "image": base64.b64encode(image).decode() if image else None,
+    }
+
+
+@router.put("/me/avatar")
+def set_avatar(body: AvatarIn, user=Depends(current_user)):
+    try:
+        image = base64.b64decode(body.image, validate=True)
+    except (binascii.Error, ValueError):
+        raise HTTPException(422, "That isn't an image.") from None
+    is_png = image.startswith(b"\x89PNG\r\n\x1a\n")
+    is_jpeg = image.startswith(b"\xff\xd8\xff")
+    if not (is_png or is_jpeg):
+        raise HTTPException(422, "The photo must be a PNG or JPEG.")
+    if len(image) > AVATAR_MAX_BYTES:
+        raise HTTPException(413, "That photo is too big.")
+    return _store_avatar(user, image)
+
+
+@router.delete("/me/avatar")
+def remove_avatar(user=Depends(current_user)):
+    return _store_avatar(user, None)
+
+
+def _store_avatar(user, image: bytes | None) -> dict:
+    with db.connect() as conn:
+        conn.execute(
+            "UPDATE users SET avatar = ?, avatar_version = avatar_version + 1 WHERE id = ?",
+            (image, user["id"]),
+        )
+        row = conn.execute("SELECT * FROM users WHERE id = ?", (user["id"],)).fetchone()
+    return _user_out(row)
 
 
 @router.get("/me/activity")

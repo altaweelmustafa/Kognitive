@@ -38,3 +38,22 @@ phone-width column in the middle of the window.
   (`/passages/gutenberg/{id}`); Wikipedia is called directly with `origin=*`.
 - Icons, favicon and the loading-screen logo come from
   `scripts/make_app_icons.py`.
+
+## Notifications (daily reminder)
+
+Settings → Daily reminder: a notification at a chosen time on days the
+session isn't finished. The backend sends it as Web Push (`backend/app/push/`),
+checking every minute; the website shows it with `web/sw.js`.
+
+- Needs the website on **https**. Browsers, and iPhones in particular, only
+  allow notifications on secure pages.
+- **iPhone (iOS 16.4+):** open the https address in Safari, Share → Add to
+  Home Screen, open Kognitiv from the Home Screen, then turn notifications on
+  in Settings → Daily reminder. A web app added from another address
+  (e.g. the plain-http one) has to be added again.
+- The server's signing key (`vapid_private.pem`) is made on first use next to
+  the database. Keep it: a new key means every device has to turn
+  notifications on again. Set `KOGNITIV_VAPID_SUBJECT` to a `mailto:` address
+  you control; push services use it to contact the sender.
+- The phone apps don't receive pushes themselves; the screen explains that
+  reminders come through the web app.

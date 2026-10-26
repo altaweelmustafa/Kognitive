@@ -12,6 +12,8 @@ abstract final class Routes {
   static const session = '/session';
   static const settings = '/settings';
   static const about = '/about';
+  static const profile = '/profile';
+  static const reminder = '/reminder';
 
   static const chessPuzzles = '/play/chess-puzzles';
   static const sudoku = '/play/sudoku';

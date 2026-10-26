@@ -11,11 +11,15 @@ class DetailScaffold extends StatelessWidget {
     required this.title,
     required this.child,
     this.onBack,
+    this.action,
   });
 
   final String title;
   final Widget child;
   final VoidCallback? onBack;
+
+  /// Shown at the right of the header, opposite the back button.
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +44,8 @@ class DetailScaffold extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
+                  if (action case final action?)
+                    Align(alignment: Alignment.centerRight, child: action),
                 ],
               ),
             ),

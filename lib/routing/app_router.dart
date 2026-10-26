@@ -23,6 +23,8 @@ import '../screens/home/home_screen.dart';
 import '../screens/library/article_screen.dart';
 import '../screens/library/library_screen.dart';
 import '../screens/login/login_screen.dart';
+import '../screens/profile/profile_screen.dart';
+import '../screens/reminder/reminder_screen.dart';
 import '../screens/session/session_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/signup/signup_screen.dart';
@@ -89,6 +91,8 @@ final appRouter = GoRouter(
     GoRoute(path: Routes.session, builder: (_, _) => const SessionScreen()),
     GoRoute(path: Routes.settings, builder: (_, _) => const SettingsScreen()),
     GoRoute(path: Routes.about, builder: (_, _) => const AboutScreen()),
+    GoRoute(path: Routes.profile, builder: (_, _) => const ProfileScreen()),
+    GoRoute(path: Routes.reminder, builder: (_, _) => const ReminderScreen()),
     GoRoute(
       path: '/game/:id',
       builder: (_, s) =>

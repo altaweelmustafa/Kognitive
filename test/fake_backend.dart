@@ -25,6 +25,18 @@ class FakeBackend {
   List<Map<String, dynamic>>? towersTrials;
   Map<String, dynamic>? mathResult;
   Map<String, dynamic>? quiverResult;
+
+  /// Profile photo (base64) and its version; saved library articles; the
+  /// daily reminder.
+  String? avatar;
+  int avatarVersion = 0;
+  final favorites = <String>[];
+  Map<String, dynamic> reminder = {
+    'enabled': false,
+    'time': '19:00',
+    'timezone': 'UTC',
+    'devices': 0,
+  };
   Map<String, dynamic>? linesResult;
 
   /// What's My Name?: every answer the app sent, with how it was judged.
@@ -78,6 +90,7 @@ class FakeBackend {
     'gender': account!['gender'],
     'email': account!['email'],
     'created_at': '2026-10-12 10:00:00',
+    'avatar_version': avatarVersion,
   };
 
   Future<http.Response> _handle(http.Request request) async {
@@ -104,7 +117,37 @@ class FakeBackend {
       });
     }
 
+    if (path.startsWith('/library/favorites/')) {
+      final id = path.substring('/library/favorites/'.length);
+      favorites.remove(id);
+      if (request.method == 'PUT') favorites.insert(0, id);
+      return _json({'saved': request.method == 'PUT'});
+    }
+
     switch (path) {
+      case '/me':
+        if (request.method == 'PATCH') account!['name'] = body['name'];
+        return _json(_user);
+      case '/me/password':
+        if (body['current'] != account!['password']) {
+          return _json({'detail': "Your current password isn't right."}, 400);
+        }
+        account!['password'] = body['new'];
+        return _json({'ok': true});
+      case '/me/avatar':
+        if (request.method == 'GET') {
+          return _json({'version': avatarVersion, 'image': avatar});
+        }
+        avatar = request.method == 'PUT' ? body['image'] as String : null;
+        avatarVersion++;
+        return _json(_user);
+      case '/library/favorites':
+        return _json({'ids': favorites});
+      case '/me/reminder':
+        if (request.method == 'PUT') {
+          reminder = {...reminder, ...body};
+        }
+        return _json(reminder);
       case '/auth/signup':
         account = body;
         verified = false;

@@ -11,6 +11,7 @@ import '../../routing/routes.dart';
 import '../../theme/app_text.dart';
 import '../../widgets/domain_label.dart';
 import '../../widgets/game_art.dart';
+import '../../widgets/user_avatar.dart';
 import '../../widgets/game_card.dart';
 import '../../widgets/pill_button.dart';
 import '../../widgets/stat_chip.dart';
@@ -53,9 +54,14 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.settings_outlined, size: 22),
-                  onPressed: () => context.push(Routes.settings),
+                // Your photo opens Settings.
+                GestureDetector(
+                  key: const ValueKey('home-avatar'),
+                  onTap: () => context.push(Routes.settings),
+                  child: const Padding(
+                    padding: EdgeInsets.all(4),
+                    child: UserAvatar(size: 36),
+                  ),
                 ),
               ],
             ),
